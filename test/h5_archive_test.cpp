@@ -1,0 +1,64 @@
+
+#include <catch2/catch_test_macros.hpp>
+#include <filesystem>
+
+#include "green/h5pp/archive.h"
+
+TEST_CASE("Archive") {
+  SECTION("Open") {
+    std::string root = TEST_PATH;
+    REQUIRE_NOTHROW(green::h5pp::archive(root + "/test.h5"));
+  }
+  SECTION("Open for Write") {
+    std::string          root           = TEST_PATH;
+    std::string          file_to_create = root + "/test_create.h5";
+    bool                 before         = std::filesystem::exists(file_to_create);
+    green::h5pp::archive ar(file_to_create, "w");
+    bool                 after = std::filesystem::exists(file_to_create);
+    REQUIRE_FALSE(before == after);
+    std::filesystem::remove(std::filesystem::path(file_to_create));
+  }
+  SECTION("Open Text File") {
+    std::string root = TEST_PATH;
+    // REQUIRE_THROWS_AS({green::h5pp::archive ar(root + "/test.txt")}, green::h5pp::not_hdf5_file_error);
+  }
+  SECTION("Open Wrong Path") {
+    std::string root = TEST_PATH;
+    // REQUIRE_THROWS_AS({green::h5pp::archive ar(root + "/test")}, green::h5pp::hdf5_file_access_error);
+  }
+  SECTION("Get Group") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5");
+    auto                 group = ar["GROUP"];
+    REQUIRE(group.type() == green::h5pp::GROUP);
+    auto inner_group = ar["GROUP/INNER_GROUP"];
+    REQUIRE(inner_group.type() == green::h5pp::GROUP);
+    inner_group = group["INNER_GROUP"];
+    REQUIRE(inner_group.type() == green::h5pp::GROUP);
+  }
+  SECTION("Get Wrong Group") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5");
+    REQUIRE_THROWS_AS(ar["GRP"], green::h5pp::hdf5_wrong_path_error);
+  }
+  SECTION("Get Dataset") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5");
+    auto                 dataset = ar["GROUP/VECTOR_DATASET"];
+    REQUIRE(dataset.type() == green::h5pp::DATASET);
+    dataset = ar["GROUP"]["INNER_GROUP/DATASET"];
+    REQUIRE(dataset.type() == green::h5pp::DATASET);
+  }
+
+  SECTION("Create Tree") {
+    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    green::h5pp::archive ar(filename, "w");
+    auto                 group = ar["GROUP/TEST"];
+    REQUIRE(group.type() == green::h5pp::UNDEFINED);
+    auto inner_group = group["INNER_GROUP"];
+    REQUIRE(inner_group.type() == green::h5pp::UNDEFINED);
+    group = ar["GROUP"];
+    REQUIRE(group.type() == green::h5pp::GROUP);
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
+}
