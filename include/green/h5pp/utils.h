@@ -5,6 +5,7 @@
 #ifndef H5PP_UTILS_H
 #define H5PP_UTILS_H
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
