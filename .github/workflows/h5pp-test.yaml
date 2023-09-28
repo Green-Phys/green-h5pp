@@ -26,4 +26,4 @@ jobs:
     - name: Test h5pp
       run: |
         cd build;
-        ctest -j2 --output-on-failure
+        make test
