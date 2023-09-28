@@ -81,7 +81,7 @@ namespace green::h5pp {
     if (check <= 0) {
       return false;
     }
-    H5O_info2_t info;
+    H5O_info_t info;
     if (H5Oget_info_by_name(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS,
                             H5P_DEFAULT) >= 0) {
       return info.type == H5O_TYPE_DATASET;
