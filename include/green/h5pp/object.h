@@ -209,8 +209,8 @@ namespace green::h5pp {
            bool is_readonly) :
         _file_id(file_id),
         _current_id(H5I_INVALID_HID), _path(root_path), _type(INVALID), _readonly(is_readonly) {
-      H5O_info1_t oinfo;
-      H5Oget_info_by_name1(parent_id, path.c_str(), &oinfo, H5P_DEFAULT);
+      H5O_info_t oinfo;
+      H5Oget_info_by_name(parent_id, path.c_str(), &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
       switch (oinfo.type) {
         case H5O_TYPE_GROUP:
           _type       = GROUP;

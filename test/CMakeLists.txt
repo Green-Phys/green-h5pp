@@ -14,7 +14,7 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(h5_test h5_archive_test.cpp h5_dataset_test.cpp utils_test.cpp)
 
-target_compile_definitions(h5_test PRIVATE TEST_PATH= "${CMAKE_CURRENT_SOURCE_DIR}/data")
+target_compile_definitions(h5_test PRIVATE TEST_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_link_libraries(h5_test
         PRIVATE
         Catch2::Catch2WithMain
