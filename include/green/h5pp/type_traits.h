@@ -7,6 +7,7 @@
 
 #include <complex>
 #include <type_traits>
+#include <vector>
 
 namespace green::h5pp {
   template <typename T>
