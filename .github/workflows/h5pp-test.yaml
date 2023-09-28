@@ -18,12 +18,12 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Build h5pp
-      run: >
-        module load BuildEnv/gcc-12.2.0.lua
-        mkdir build && cd build && cmake ..
+      run: |
+        module load BuildEnv/gcc-12.2.0.lua;
+        mkdir build && cd build && cmake ..;
         make -j2 || make -j1 VERBOSE=1
 
     - name: Test h5pp
-      run: >
-        cd build
+      run: |
+        cd build;
         ctest -j2 --output-on-failure
