@@ -81,8 +81,8 @@ namespace green::h5pp {
     if (check <= 0) {
       return false;
     }
-    H5O_info_t info;
-    if (H5Oget_info_by_name(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS,
+    H5O_info1_t info;
+    if (H5Oget_info_by_name2(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS,
                             H5P_DEFAULT) >= 0) {
       return info.type == H5O_TYPE_DATASET;
     }
@@ -209,8 +209,8 @@ namespace green::h5pp {
            bool is_readonly) :
         _file_id(file_id),
         _current_id(H5I_INVALID_HID), _path(root_path), _type(INVALID), _readonly(is_readonly) {
-      H5O_info_t oinfo;
-      H5Oget_info_by_name(parent_id, path.c_str(), &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
+      H5O_info1_t oinfo;
+      H5Oget_info_by_name2(parent_id, path.c_str(), &oinfo, H5O_INFO_BASIC, H5P_DEFAULT);
       switch (oinfo.type) {
         case H5O_TYPE_GROUP:
           _type       = GROUP;
