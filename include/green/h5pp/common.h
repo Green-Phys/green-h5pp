@@ -313,7 +313,9 @@ namespace green::h5pp {
       }
     }
     hid_t tid = H5Dget_type(current_id);
-    assert(H5Tget_class(tid) == H5T_STRING);
+    if (H5Tget_class(tid) != H5T_STRING) {
+      throw hdf5_read_error("Dataset " + path + " does not contain string data.");
+    }
 
     if (H5Tis_variable_str(tid)) {
       char*       rd_ptr[1];
