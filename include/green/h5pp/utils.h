@@ -21,7 +21,7 @@ namespace green::h5pp::utils {
     std::string res(s);
     res.erase(
         std::find_if(res.rbegin(), res.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
-        s.end());
+        res.end());
     return res;
   }
   inline std::string              trim(const std::string& s) { return rtrim(ltrim(s)); }
