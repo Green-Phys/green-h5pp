@@ -25,5 +25,6 @@ jobs:
 
     - name: Test h5pp
       run: |
+        module load BuildEnv/gcc-12.2.0.lua;
         cd build;
         ctest -j2 --output-on-failure
