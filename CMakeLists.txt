@@ -5,4 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(include)
 add_subdirectory(src)
-add_subdirectory(test)
+
+option(Build_Tests "Build tests" ON)
+if (Build_Tests)
+    enable_testing()
+    add_subdirectory(test)
+endif ()

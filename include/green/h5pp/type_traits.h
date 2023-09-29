@@ -15,11 +15,11 @@ namespace green::h5pp {
   template <typename T>
   struct is_complex_t<std::complex<T>> : std::true_type {};
   template <typename T>
-  constexpr bool is_complex_scalar = is_complex_t<T>::value;
+  constexpr bool is_complex_scalar = is_complex_t<std::remove_reference_t<T>>::value;
   template <typename T>
-  constexpr bool is_scalar =
-      std::is_arithmetic_v<T> || std::is_same_v<T, std::string> ||
-      std::is_arithmetic_v<std::remove_reference_t<T>> || is_complex_scalar<std::remove_reference_t<T>>;
+  constexpr bool is_scalar = std::is_arithmetic_v<T> || std::is_arithmetic_v<std::remove_reference_t<T>> || is_complex_scalar<T>;
+  template <typename T>
+  constexpr bool is_string = std::is_same_v<std::remove_reference_t<std::remove_const_t<T>>, std::string>;
 
   template <typename... Ts>
   using void_t = void;
@@ -57,7 +57,7 @@ namespace green::h5pp {
   using has_reshape_t = typename detector<reshape_method_t, void, T>::type;
 
   template <typename T>
-  constexpr bool is_1D_array = has_data_t<T>::value && has_size_t<T>::value && !has_shape_t<T>::value;
+  constexpr bool is_1D_array = has_data_t<T>::value && has_size_t<T>::value && !has_shape_t<T>::value && !is_string<T>;
   template <typename T>
   constexpr bool is_ND_array = has_data_t<T>::value && has_size_t<T>::value && has_shape_t<T>::value;
   template <typename T>

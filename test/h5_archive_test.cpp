@@ -36,6 +36,12 @@ TEST_CASE("Archive") {
     inner_group = group["INNER_GROUP"];
     REQUIRE(inner_group.type() == green::h5pp::GROUP);
   }
+  SECTION("Get Group for const Archive") {
+    std::string                root = TEST_PATH;
+    const green::h5pp::archive ar(root + "/test.h5");
+    auto                       group = ar["GROUP"];
+    REQUIRE(group.type() == green::h5pp::GROUP);
+  }
   SECTION("Get Wrong Group") {
     std::string          root = TEST_PATH;
     green::h5pp::archive ar(root + "/test.h5");

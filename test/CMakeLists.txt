@@ -13,11 +13,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 
 add_executable(h5_test h5_archive_test.cpp h5_dataset_test.cpp utils_test.cpp)
-
 target_compile_definitions(h5_test PRIVATE TEST_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")
 target_link_libraries(h5_test
         PRIVATE
         Catch2::Catch2WithMain
         h5pp)
 
-add_test(h5_catchtest h5_test)
+include(CTest)
+include(Catch)
+catch_discover_tests(h5_test)

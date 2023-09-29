@@ -56,7 +56,7 @@ BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: AfterColon
 BreakInheritanceList: AfterColon
 BreakStringLiterals: true
-ColumnLimit: 110
+ColumnLimit: 130
 CommentPragmas: "^ IWYU pragma:"
 CompactNamespaces: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
