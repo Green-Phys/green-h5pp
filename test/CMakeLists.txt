@@ -1,7 +1,5 @@
 project(h5pp_test)
 
-include(FetchContent)
-
 Include(FetchContent)
 
 FetchContent_Declare(
@@ -17,7 +15,7 @@ target_compile_definitions(h5_test PRIVATE TEST_PATH="${CMAKE_CURRENT_SOURCE_DIR
 target_link_libraries(h5_test
         PRIVATE
         Catch2::Catch2WithMain
-        h5pp)
+        GREEN::H5PP)
 
 include(CTest)
 include(Catch)

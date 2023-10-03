@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.18)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 project(h5pp)
@@ -9,8 +9,8 @@ endif()
 
 set(CMAKE_CXX_STANDARD 17)
 
-include_directories(include)
 add_subdirectory(src)
+add_library(GREEN::H5PP ALIAS h5pp)
 
 option(Build_Tests "Build tests" ON)
 if (Build_Tests)
