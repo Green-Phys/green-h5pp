@@ -82,5 +82,6 @@ TEST_CASE("Archive") {
     REQUIRE(ar.is_valid());
     REQUIRE(ar.close());
     REQUIRE_FALSE(ar.is_valid());
+    REQUIRE_THROWS_AS(ar.close(), green::h5pp::hdf5_file_access_error);
   }
 }
