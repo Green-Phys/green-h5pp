@@ -56,6 +56,15 @@ TEST_CASE("Archive") {
     REQUIRE(gr.has_group("INNER_GROUP"));
     REQUIRE_FALSE(ar["GRP"].has_group("INNER_GROUP"));
   }
+  SECTION("Check Dataset Existence") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5", "a");
+    REQUIRE(ar.is_data("GROUP/SCALAR_DATASET"));
+    REQUIRE_FALSE(ar.is_data("GRP"));
+    auto gr = ar["GROUP"];
+    REQUIRE(gr.is_data("SCALAR_DATASET"));
+    REQUIRE_FALSE(ar["GRP"].is_data("DATASET"));
+  }
   SECTION("Get Dataset") {
     std::string          root = TEST_PATH;
     green::h5pp::archive ar(root + "/test.h5");

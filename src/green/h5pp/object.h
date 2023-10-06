@@ -258,6 +258,14 @@ namespace green::h5pp {
     }
 
     /**
+     * @return `true' if dataset `dataset_name' exists
+     */
+    bool is_data(const std::string& dataset_name) const {
+      if (_current_id == H5I_INVALID_HID) return false;
+      return dataset_exists(_current_id, dataset_name[0] != '/' ? _path + "/" + dataset_name : dataset_name);
+    }
+
+    /**
      * Check if object state is valid
      * @return true if object is valid
      */
