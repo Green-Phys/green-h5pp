@@ -9,6 +9,7 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(Catch2)
+list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
 add_executable(h5_test h5_archive_test.cpp h5_dataset_test.cpp utils_test.cpp)
 target_compile_definitions(h5_test PRIVATE TEST_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data")

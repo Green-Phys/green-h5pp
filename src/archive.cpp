@@ -4,10 +4,9 @@
 #include <iostream>
 
 green::h5pp::archive::archive(const std::string& filename, const std::string& access_type) :
-    object(-1, "/", FILE, access_type == "r") {
+    object(-1, "/", FILE, access_type == "r"), _filename(filename) {
   if (access_type != "r" && access_type != "w" && access_type != "a") {
-    throw hdf5_unknown_access_type_error("Unknown access type " + access_type +
-                                         ". Should be 'r', 'w' or 'a'");
+    throw hdf5_unknown_access_type_error("Unknown access type " + access_type + ". Should be 'r', 'w' or 'a'");
   }
   bool file_exists = std::filesystem::exists(filename);
 
@@ -40,4 +39,13 @@ green::h5pp::archive::archive(const std::string& filename, const std::string& ac
 
 green::h5pp::archive::~archive() {
   if (file_id() != H5I_INVALID_HID) H5Fclose(file_id());
+}
+
+bool green::h5pp::archive::close() {
+  if (H5Fclose(file_id()) < 0) {
+    throw hdf5_file_access_error("Can not close file " + _filename);
+  }
+  file_id()    = H5I_INVALID_HID;
+  current_id() = H5I_INVALID_HID;
+  return true;
 }

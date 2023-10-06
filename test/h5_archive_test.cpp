@@ -47,6 +47,15 @@ TEST_CASE("Archive") {
     green::h5pp::archive ar(root + "/test.h5");
     REQUIRE_THROWS_AS(ar["GRP"], green::h5pp::hdf5_wrong_path_error);
   }
+  SECTION("Check Group Existence") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5", "a");
+    REQUIRE(ar.has_group("GROUP"));
+    REQUIRE_FALSE(ar.has_group("GRP"));
+    auto gr = ar["GROUP"];
+    REQUIRE(gr.has_group("INNER_GROUP"));
+    REQUIRE_FALSE(ar["GRP"].has_group("INNER_GROUP"));
+  }
   SECTION("Get Dataset") {
     std::string          root = TEST_PATH;
     green::h5pp::archive ar(root + "/test.h5");
@@ -66,5 +75,12 @@ TEST_CASE("Archive") {
     group = ar["GROUP"];
     REQUIRE(group.type() == green::h5pp::GROUP);
     std::filesystem::remove(std::filesystem::path(filename));
+  }
+  SECTION("Close File") {
+    std::string          root = TEST_PATH;
+    green::h5pp::archive ar(root + "/test.h5");
+    REQUIRE(ar.is_valid());
+    REQUIRE(ar.close());
+    REQUIRE_FALSE(ar.is_valid());
   }
 }

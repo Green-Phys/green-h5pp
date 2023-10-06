@@ -9,6 +9,11 @@ namespace green::h5pp {
   public:
     archive(const std::string& filename, const std::string& access_type = "r");
     virtual ~archive();
+
+    bool close();
+
+  private:
+    std::string _filename;
   };
 
 }  // namespace green::h5pp

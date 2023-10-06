@@ -1,7 +1,6 @@
 #ifndef H5PP_OBJECT_H
 #define H5PP_OBJECT_H
 
-
 #include <iostream>
 #include <string>
 
@@ -10,7 +9,6 @@
 namespace green::h5pp {
 
   enum object_type { FILE, DATASET, GROUP, UNDEFINED, INVALID };
-
 
   class object {
   public:
@@ -31,8 +29,7 @@ namespace green::h5pp {
      * @param rhs - object to be moved
      */
     object(object&& rhs) :
-        _file_id(rhs._file_id), _current_id(rhs._current_id), _path(rhs._path), _type(rhs._type),
-        _readonly(rhs._readonly) {
+        _file_id(rhs._file_id), _current_id(rhs._current_id), _path(rhs._path), _type(rhs._type), _readonly(rhs._readonly) {
       rhs._file_id    = H5I_INVALID_HID;
       rhs._current_id = H5I_INVALID_HID;
     }
@@ -250,7 +247,21 @@ namespace green::h5pp {
     /**
      * @return type of the object
      */
-    object_type        type() const { return _type; }
+    object_type type() const { return _type; }
+
+    /**
+     * @return `true' if group `group_name' exists
+     */
+    bool has_group(const std::string& group_name) const {
+      if (_current_id == H5I_INVALID_HID) return false;
+      return group_exists(_current_id, group_name[0] != '/' ? _path + "/" + group_name : group_name);
+    }
+
+    /**
+     * Check if object state is valid
+     * @return true if object is valid
+     */
+    bool is_valid() const { return _file_id != H5I_INVALID_HID || _current_id != H5I_INVALID_HID; }
 
   protected:
     hid_t& file_id() { return _file_id; }

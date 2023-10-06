@@ -82,6 +82,25 @@ namespace green::h5pp {
   }  // namespace internal
 
   /**
+   * Check if group with name `name' exists
+   *
+   * @param root_parent - hdf5 id of the root group or file
+   * @param name - name of the group
+   * @return `true' if group exists
+   */
+  inline bool group_exists(hid_t root_parent, const std::string& name) {
+    htri_t check = H5Lexists(root_parent, name.c_str(), H5P_DEFAULT);
+    if (check <= 0) {
+      return false;
+    }
+    hdf5_info_t info;
+    if (H5Oget_info_by_name2(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS, H5P_DEFAULT) >= 0) {
+      return info.type == H5O_TYPE_GROUP;
+    }
+    return false;
+  }
+
+  /**
    * Check if dataset with name `name' exists
    *
    * @param root_parent - hdf5 id of the root group or file
