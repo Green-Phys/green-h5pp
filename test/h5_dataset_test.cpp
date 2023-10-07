@@ -1,6 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include <array>
+#include <catch2/catch_test_macros.hpp>
 #include <complex>
 #include <filesystem>
 
@@ -11,8 +10,7 @@ using namespace std::literals;
 template <typename T, size_t N>
 struct NDArray {
   NDArray(std::array<size_t, N> new_shape, T val) :
-      _shape(new_shape),
-      _data(std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>()), val) {}
+      _shape(new_shape), _data(std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>()), val) {}
 
   size_t                       size() const { return _data.size(); }
   size_t                       dim() const { return N; }
@@ -213,8 +211,7 @@ TEST_CASE("Dataset Operations") {
     std::vector<double> new_data;
     group["DATASET"] >> new_data;
     REQUIRE(data.size() == new_data.size());
-    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(),
-                       [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
     std::filesystem::remove(std::filesystem::path(filename));
   }
 
@@ -257,10 +254,10 @@ TEST_CASE("Dataset Operations") {
     std::vector<std::complex<float>> new_data;
     group["DATASET"] >> new_data;
     REQUIRE(data.size() == new_data.size());
-    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(),
-                       [](const std::complex<double>& a, const std::complex<double>& b) {
-                         return (std::abs(a.real() - b.real()) + std::abs(a.imag() - b.imag())) < 1e-10;
-                       }));
+    REQUIRE(
+        std::equal(data.begin(), data.end(), new_data.begin(), [](const std::complex<double>& a, const std::complex<double>& b) {
+          return (std::abs(a.real() - b.real()) + std::abs(a.imag() - b.imag())) < 1e-10;
+        }));
     std::filesystem::remove(std::filesystem::path(filename));
   }
 
@@ -296,5 +293,18 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(std::equal(data.data(), data.data() + data.size(), data_new.data(),
                        [](double a, double b) { return (std::abs(a - b)) < 1e-10; }));
     std::filesystem::remove(std::filesystem::path(filename));
+  }
+
+  SECTION("Read into Pointer") {
+    std::string          filename = TEST_PATH + "/test.h5"s;
+    green::h5pp::archive ar(filename, "r");
+    auto                 group = ar["GROUP"];
+    NDArray<double, 2>   data(
+        std::array<size_t, 2>{
+            {10, 6}
+    },
+        5.0);
+    group["NDARRAY_DATASET"] >> data.data();
+    REQUIRE(std::abs(*data.data() - 0.110326) < 1e-6);
   }
 }
