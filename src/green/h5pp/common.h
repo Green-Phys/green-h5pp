@@ -70,11 +70,19 @@ namespace green::h5pp {
     };
 
     template <>
+    inline hid_t hdf5_typename<bool>::type = H5T_NATIVE_HBOOL;
+    template <>
     inline hid_t hdf5_typename<int>::type = H5T_NATIVE_INT;
+    template <>
+    inline hid_t hdf5_typename<unsigned int>::type = H5T_NATIVE_UINT;
     template <>
     inline hid_t hdf5_typename<long>::type = H5T_NATIVE_LONG;
     template <>
+    inline hid_t hdf5_typename<long long>::type = H5T_NATIVE_LLONG;
+    template <>
     inline hid_t hdf5_typename<unsigned long>::type = H5T_NATIVE_ULONG;
+    template <>
+    inline hid_t hdf5_typename<unsigned long long>::type = H5T_NATIVE_ULLONG;
     template <>
     inline hid_t hdf5_typename<float>::type = H5T_NATIVE_FLOAT;
     template <>

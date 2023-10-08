@@ -9,6 +9,15 @@ TEST_CASE("Archive") {
     std::string root = TEST_PATH;
     REQUIRE_NOTHROW(green::h5pp::archive(root + "/test.h5"));
   }
+  SECTION("Open Default Constructed") {
+    std::string root = TEST_PATH;
+    green::h5pp::archive ar;
+    REQUIRE_NOTHROW(ar.open(root + "/test.h5"));
+    REQUIRE_THROWS_AS(ar.open(root + "/test.h5"), green::h5pp::hdf5_file_access_error);
+    ar.close();
+    REQUIRE_NOTHROW(ar.open(root + "/test.h5"));
+  }
+
   SECTION("Open for Write") {
     std::string          root           = TEST_PATH;
     std::string          file_to_create = root + "/test_create.h5";

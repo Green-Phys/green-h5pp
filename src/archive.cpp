@@ -4,7 +4,14 @@
 #include <iostream>
 
 green::h5pp::archive::archive(const std::string& filename, const std::string& access_type) :
-    object(-1, "/", FILE, access_type == "r"), _filename(filename) {
+    object(H5I_INVALID_HID, "/", FILE, access_type == "r"), _filename(filename) {
+  open(filename, access_type);
+}
+
+void green::h5pp::archive::open(const std::string& filename, const std::string& access_type) {
+  if (file_id() != H5I_INVALID_HID) {
+    throw hdf5_file_access_error("File is already opened. Please close current file before opening another.");
+  }
   if (access_type != "r" && access_type != "w" && access_type != "a") {
     throw hdf5_unknown_access_type_error("Unknown access type " + access_type + ". Should be 'r', 'w' or 'a'");
   }
@@ -22,7 +29,7 @@ green::h5pp::archive::archive(const std::string& filename, const std::string& ac
       throw not_hdf5_file_error(filename + " is not an HDF5 file.");
     }
   }
-  hid_t file;
+  hid_t file = H5I_INVALID_HID;
   if (access_type == "r")
     file = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
   else if (access_type == "a")
@@ -35,6 +42,7 @@ green::h5pp::archive::archive(const std::string& filename, const std::string& ac
   }
   file_id()    = file;
   current_id() = file;
+  readonly()   = access_type == "r";
 }
 
 green::h5pp::archive::~archive() {
