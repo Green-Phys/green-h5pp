@@ -74,6 +74,8 @@ namespace green::h5pp {
     template <>
     inline hid_t hdf5_typename<long>::type = H5T_NATIVE_LONG;
     template <>
+    inline hid_t hdf5_typename<unsigned long>::type = H5T_NATIVE_ULONG;
+    template <>
     inline hid_t hdf5_typename<float>::type = H5T_NATIVE_FLOAT;
     template <>
     inline hid_t hdf5_typename<double>::type = H5T_NATIVE_DOUBLE;
