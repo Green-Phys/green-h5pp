@@ -192,7 +192,7 @@ namespace green::h5pp {
      * @return current object to chain reading.
      */
     template <typename T>
-    object& operator>>(T& rhs) {
+    object& operator>>(T&& rhs) {
       if (_type != DATASET) {
         throw hdf5_not_a_dataset_error(_path + " is not a dataset");
       }
