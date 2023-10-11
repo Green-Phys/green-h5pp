@@ -70,9 +70,19 @@ namespace green::h5pp {
     };
 
     template <>
+    inline hid_t hdf5_typename<bool>::type = H5T_NATIVE_HBOOL;
+    template <>
     inline hid_t hdf5_typename<int>::type = H5T_NATIVE_INT;
     template <>
+    inline hid_t hdf5_typename<unsigned int>::type = H5T_NATIVE_UINT;
+    template <>
     inline hid_t hdf5_typename<long>::type = H5T_NATIVE_LONG;
+    template <>
+    inline hid_t hdf5_typename<long long>::type = H5T_NATIVE_LLONG;
+    template <>
+    inline hid_t hdf5_typename<unsigned long>::type = H5T_NATIVE_ULONG;
+    template <>
+    inline hid_t hdf5_typename<unsigned long long>::type = H5T_NATIVE_ULLONG;
     template <>
     inline hid_t hdf5_typename<float>::type = H5T_NATIVE_FLOAT;
     template <>
@@ -304,6 +314,32 @@ namespace green::h5pp {
     else
       data = rhs.data();
     if (H5Dread(current_id, get_type_id(rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+      throw hdf5_read_error("Can not read dataset " + path);
+  }
+
+  /**
+   * Read `current_id' dataset into a raw pointer of arithmetic types
+   *
+   * @tparam T - type of target data
+   * @param current_id - id of dataset to be read
+   * @param path - absolute path to dataset (needed for error message)
+   * @param rhs - pointer to the target data
+   */
+  template <typename T>
+  std::enable_if_t<is_scalar<T>> read_dataset(hid_t current_id, const std::string& path, T* rhs) {
+    hid_t   space_id;
+    hsize_t src_rank;
+    space_id = H5Dget_space(current_id);
+
+    src_rank = H5Sget_simple_extent_ndims(space_id);
+    std::vector<hsize_t> int_dims(src_rank);
+    H5Sget_simple_extent_dims(space_id, int_dims.data(), NULL);
+    std::vector<size_t> src_dims(int_dims.begin(), int_dims.end());
+    if (H5Tcompiler_conv(H5Dget_type(current_id), get_type_id(*rhs)) < 0) {
+      throw hdf5_data_conversion_error("Can not convert data to specified type.");
+    }
+    void* data = rhs;
+    if (H5Dread(current_id, get_type_id(*rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
       throw hdf5_read_error("Can not read dataset " + path);
   }
 

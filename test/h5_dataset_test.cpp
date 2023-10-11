@@ -1,6 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include <array>
+#include <catch2/catch_test_macros.hpp>
 #include <complex>
 #include <filesystem>
 
@@ -11,8 +10,7 @@ using namespace std::literals;
 template <typename T, size_t N>
 struct NDArray {
   NDArray(std::array<size_t, N> new_shape, T val) :
-      _shape(new_shape),
-      _data(std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>()), val) {}
+      _shape(new_shape), _data(std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>()), val) {}
 
   size_t                       size() const { return _data.size(); }
   size_t                       dim() const { return N; }
@@ -213,8 +211,7 @@ TEST_CASE("Dataset Operations") {
     std::vector<double> new_data;
     group["DATASET"] >> new_data;
     REQUIRE(data.size() == new_data.size());
-    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(),
-                       [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
     std::filesystem::remove(std::filesystem::path(filename));
   }
 
@@ -257,10 +254,10 @@ TEST_CASE("Dataset Operations") {
     std::vector<std::complex<float>> new_data;
     group["DATASET"] >> new_data;
     REQUIRE(data.size() == new_data.size());
-    REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(),
-                       [](const std::complex<double>& a, const std::complex<double>& b) {
-                         return (std::abs(a.real() - b.real()) + std::abs(a.imag() - b.imag())) < 1e-10;
-                       }));
+    REQUIRE(
+        std::equal(data.begin(), data.end(), new_data.begin(), [](const std::complex<double>& a, const std::complex<double>& b) {
+          return (std::abs(a.real() - b.real()) + std::abs(a.imag() - b.imag())) < 1e-10;
+        }));
     std::filesystem::remove(std::filesystem::path(filename));
   }
 
@@ -295,6 +292,68 @@ TEST_CASE("Dataset Operations") {
     group["DATASET"] >> data_new;
     REQUIRE(std::equal(data.data(), data.data() + data.size(), data_new.data(),
                        [](double a, double b) { return (std::abs(a - b)) < 1e-10; }));
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
+
+  SECTION("Read into Pointer") {
+    std::string          filename = TEST_PATH + "/test.h5"s;
+    green::h5pp::archive ar(filename, "r");
+    auto                 group = ar["GROUP"];
+    NDArray<double, 2>   data(
+        std::array<size_t, 2>{
+            {10, 6}
+    },
+        5.0);
+    group["NDARRAY_DATASET"] >> data.data();
+    REQUIRE(std::abs(*data.data() - 0.110326) < 1e-6);
+  }
+
+  SECTION("Write different datatypes") {
+    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    green::h5pp::archive ar(filename, "w");
+    bool b = true;
+    int32_t i = 10;
+    uint32_t ui = 10u;
+    int64_t l = 20l;
+    uint64_t ul = 30ul;
+    float f = 0.5f;
+    double d = 1.5;
+    std::complex<float> cf(0.5, 1.2);
+    std::complex<double> cd(1.5, 0.2);
+    std::string s = "ABCD";
+    REQUIRE_NOTHROW(ar["b"] << b);
+    REQUIRE_NOTHROW(ar["i"] << i);
+    REQUIRE_NOTHROW(ar["ui"] << ui);
+    REQUIRE_NOTHROW(ar["l"] << l);
+    REQUIRE_NOTHROW(ar["ul"] << ul);
+    REQUIRE_NOTHROW(ar["f"] << f);
+    REQUIRE_NOTHROW(ar["d"] << d);
+    REQUIRE_NOTHROW(ar["cf"] << cf);
+    REQUIRE_NOTHROW(ar["cd"] << cd);
+    REQUIRE_NOTHROW(ar["s"] << s);
+    ar.close();
+    b = i = ui = l = ul = f = d = 0;
+    ar.open(filename, "r");
+    REQUIRE_NOTHROW(ar["b"] >> b);
+    REQUIRE_NOTHROW(ar["i"] >> i);
+    REQUIRE_NOTHROW(ar["ui"] >> ui);
+    REQUIRE_NOTHROW(ar["l"] >> l);
+    REQUIRE_NOTHROW(ar["ul"] >> ul);
+    REQUIRE_NOTHROW(ar["f"] >> f);
+    REQUIRE_NOTHROW(ar["d"] >> d);
+    REQUIRE_NOTHROW(ar["cf"] >> cf);
+    REQUIRE_NOTHROW(ar["cd"] >> cd);
+    REQUIRE_NOTHROW(ar["s"] >> s);
+    REQUIRE(b);
+    REQUIRE(i == 10);
+    REQUIRE(ui == 10u);
+    REQUIRE(l == 20l);
+    REQUIRE(ul == 30ul);
+    REQUIRE(std::abs(f - 0.5f)< 1e-12);
+    REQUIRE(std::abs(d - 1.5) < 1e-12);
+    REQUIRE(std::abs(cf - std::complex<float>(0.5, 1.2)) < 1e-12);
+    REQUIRE(std::abs(cd - std::complex<double>(1.5, 0.2)) < 1e-12);
+    REQUIRE(s == "ABCD");
     std::filesystem::remove(std::filesystem::path(filename));
   }
 }

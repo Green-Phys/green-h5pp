@@ -188,7 +188,7 @@ namespace green::h5pp {
      * Read data from current dataset into `rhs' variable. Check that object is dataset.
      *
      * @tparam T - type of variable
-     * @param rhs - variable to read rata into
+     * @param rhs - variable to read data into
      * @return current object to chain reading.
      */
     template <typename T>
@@ -200,6 +200,26 @@ namespace green::h5pp {
         read_dataset(_current_id, _path, rhs);
       } else if constexpr (is_string<T>) {
         read_string_dataset(_current_id, _path, rhs);
+      } else {
+        throw hdf5_unsupported_type_error("Type "s + typeid(T).name() + " is not supported in current implementation"s);
+      }
+      return *this;
+    }
+
+    /**
+     * Read data from current dataset into a variable with `rhs' pointer. Check that object is dataset.
+     *
+     * @tparam T - type of variable
+     * @param rhs - pointer to a variable to read data into
+     * @return current object to chain reading.
+     */
+    template <typename T>
+    object& operator>>(T* rhs) {
+      if (_type != DATASET) {
+        throw hdf5_not_a_dataset_error(_path + " is not a dataset");
+      }
+      if constexpr (is_scalar<T>) {
+        read_dataset(_current_id, _path, rhs);
       } else {
         throw hdf5_unsupported_type_error("Type "s + typeid(T).name() + " is not supported in current implementation"s);
       }
