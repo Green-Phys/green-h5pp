@@ -9,6 +9,7 @@ using namespace std::literals;
 
 template <typename T, size_t N>
 struct NDArray {
+  NDArray() {}
   NDArray(std::array<size_t, N> new_shape, T val) :
       _shape(new_shape), _data(std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>()), val) {}
 
@@ -242,6 +243,31 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(
         std::equal(data_25.begin(), data_25.end(), nd_data.data(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
     std::filesystem::remove(std::filesystem::path(filename));
+  }
+
+  SECTION("Update NDArray") {
+    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    green::h5pp::archive ar(filename, "w");
+    NDArray<double, 3>   nd_data(
+        std::array<size_t, 3>{
+            {1, 1, 1}
+    },
+        5.0);
+    ar["DATASET"] << nd_data;
+    ar.close();
+    ar.open(filename, "a");
+    NDArray<double, 3> new_data;
+    ar["DATASET"] >> new_data;
+    REQUIRE(std::equal(nd_data.data(), nd_data.data() + nd_data.size(), new_data.data(),
+                       [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    std::fill(new_data._data.begin(), new_data._data.end(), 15);
+    ar["DATASET"] << new_data;
+    REQUIRE_FALSE(std::equal(nd_data.data(), nd_data.data() + nd_data.size(), new_data.data(),
+                             [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    ar["DATASET"] >> nd_data;
+    REQUIRE(std::equal(nd_data.data(), nd_data.data() + nd_data.size(), new_data.data(),
+                       [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    ar.close();
   }
 
   SECTION("Write Complex Array") {

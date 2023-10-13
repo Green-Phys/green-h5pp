@@ -205,8 +205,15 @@ namespace green::h5pp {
       if (dst_rank != src_rank || dst_dims != src_dims) {
         throw hdf5_write_error("Source container's shape and dataset " + path + "'s shape are different.");
       }
+    } else {
+      throw hdf5_write_error("Can update only numerical types");
     }
-    H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, &rhs);
+    const void* data;
+    if constexpr (is_scalar<T>)
+      data = &rhs;
+    else if constexpr (is_1D_array<T> || is_ND_array<T>)
+      data = rhs.data();
+    H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, data);
     H5Sclose(dataspace_id);
   }
 
