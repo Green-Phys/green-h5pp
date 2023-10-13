@@ -70,6 +70,7 @@ TEST_CASE("Archive") {
     green::h5pp::archive ar(root + "/test.h5", "a");
     REQUIRE(ar.is_data("GROUP/SCALAR_DATASET"));
     REQUIRE_FALSE(ar.is_data("GRP"));
+    REQUIRE_FALSE(ar.is_data("GRP/DATA"));
     auto gr = ar["GROUP"];
     REQUIRE(gr.is_data("SCALAR_DATASET"));
     REQUIRE_FALSE(ar["GRP"].is_data("DATASET"));

@@ -118,9 +118,14 @@ namespace green::h5pp {
    * @return `true' if dataset exists
    */
   inline bool dataset_exists(hid_t root_parent, const std::string& name) {
-    htri_t check = H5Lexists(root_parent, name.c_str(), H5P_DEFAULT);
-    if (check <= 0) {
-      return false;
+    std::vector<std::string> branch   = utils::split(name, "/");
+    std::string              to_check = "";
+    for (auto item : branch) {
+      to_check += "/" + item;
+      htri_t check = H5Lexists(root_parent, to_check.c_str(), H5P_DEFAULT);
+      if (check <= 0) {
+        return false;
+      }
     }
     hdf5_info_t info;
     if (H5Oget_info_by_name2(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS, H5P_DEFAULT) >= 0) {
