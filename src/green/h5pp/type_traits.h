@@ -37,7 +37,10 @@ namespace green::h5pp {
   // reshape_method_t is a detector type for T.reshape() const
   template <typename T>
   using reshape_method_t = decltype(std::declval<T&>().reshape(std::declval<std::vector<std::size_t>>()));
-  // reshape_method_t is a detector type for T.reshape() const
+  // resize_method_t is a detector type for T.resize(size_t) const
+  template <typename T>
+  using resizend_method_t = decltype(std::declval<T&>().resize(std::declval<std::vector<std::size_t>>()));
+  // resize_method_t is a detector type for T.resize(size_t) const
   template <typename T>
   using resize_method_t = decltype(std::declval<T&>().resize(std::declval<std::size_t>()));
   // data_method_t is a detector type for T.data() const
@@ -54,6 +57,8 @@ namespace green::h5pp {
   template <typename T>
   using has_resize_t = typename detector<resize_method_t, void, T>::type;
   template <typename T>
+  using has_resizend_t = typename detector<resizend_method_t, void, T>::type;
+  template <typename T>
   using has_reshape_t = typename detector<reshape_method_t, void, T>::type;
 
   template <typename T>
@@ -64,6 +69,8 @@ namespace green::h5pp {
   constexpr bool is_resizable = has_resize_t<T>::value;
   template <typename T>
   constexpr bool is_reshapable = has_reshape_t<T>::value;
+  template <typename T>
+  constexpr bool is_resizable_nd = has_resizend_t<T>::value;
 
 }  // namespace green::h5pp
 

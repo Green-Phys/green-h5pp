@@ -21,7 +21,7 @@ struct NDArray {
   const std::array<size_t, N>& shape() const { return _shape; }
 
   template <typename C>
-  void reshape(const C& new_shape) {
+  void resize(const C& new_shape) {
     assert(new_shape.size() == _shape.size());
     std::copy(new_shape.begin(), new_shape.end(), _shape.begin());
     size_t new_size = std::accumulate(new_shape.begin(), new_shape.end(), 1ul, std::multiplies<size_t>());
@@ -132,7 +132,7 @@ TEST_CASE("Dataset Operations") {
     group["NDARRAY_SCALAR"] << data;
     group["NDARRAY_SCALAR"] >> new_data;
     REQUIRE(std::abs(new_data - data) < 1e-10);
-    nd_data.reshape(std::array<size_t, 3>{
+    nd_data.resize(std::array<size_t, 3>{
         {1, 1, 2}
     });
     group["NDARRAY"] << nd_data;

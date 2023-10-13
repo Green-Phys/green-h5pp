@@ -288,19 +288,19 @@ namespace green::h5pp {
         throw hdf5_not_a_scalar_error("Dataset " + path + " contains non scalar data.");
       }
     } else if constexpr (is_1D_array<T>) {
-      if constexpr (is_resizable<T>) {
-        rhs.resize(std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>()));
-      } else {
-        if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<size_t>()) !=
-            std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>())) {
+      if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<size_t>()) !=
+          std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>())) {
+        if constexpr (is_resizable<T>) {
+          rhs.resize(std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>()));
+        } else {
           throw hdf5_read_error("Target container's shape and dataset's shape are different and container cannot be resized.");
         }
       }
     } else if constexpr (is_ND_array<T>) {
-      if constexpr (is_reshapable<T>) {
-        rhs.reshape(src_dims);
-      } else {
-        if (src_rank != dst_rank || src_dims != dst_dims) {
+      if (src_rank != dst_rank || src_dims != dst_dims) {
+        if constexpr (is_resizable_nd<T>) {
+          rhs.resize(src_dims);
+        } else {
           throw hdf5_read_error("Target container's shape and dataset's shape are different and container cannot be resized.");
         }
       }
