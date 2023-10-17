@@ -24,7 +24,9 @@ jobs:
         make -j2 || make -j1 VERBOSE=1
 
     - name: Test h5pp
+      env:
+        HDF5_USE_FILE_LOCKING: 'FALSE'
       run: |
         module load BuildEnv/gcc-12.2.0.lua;
         cd build;
-        ctest -j1 --output-on-failure
+        ctest -j4 --output-on-failure

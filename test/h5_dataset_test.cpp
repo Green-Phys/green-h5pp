@@ -4,6 +4,7 @@
 #include <filesystem>
 
 #include "green/h5pp/archive.h"
+#include "test_common.h"
 
 using namespace std::literals;
 
@@ -99,7 +100,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write Scalar") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP"];
     double               data  = 10;
@@ -111,7 +112,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Update Scalar") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP"];
     double               data  = 10;
@@ -142,7 +143,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write Complex Scalar") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP"];
     std::complex<double> data(5.0, 10.0);
@@ -166,7 +167,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write String") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP"];
     std::string          data  = "HELLO WORLD!";
@@ -174,7 +175,7 @@ TEST_CASE("Dataset Operations") {
     std::string new_data = "";
     ar["GROUP/STRING_DATASET"] >> new_data;
     REQUIRE(data == new_data);
-    // std::filesystem::remove(std::filesystem::path(filename));
+    std::filesystem::remove(std::filesystem::path(filename));
   }
 
   SECTION("Read Array") {
@@ -203,7 +204,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write Array") {
-    std::string            filename = TEST_PATH + "/test_write.h5"s;
+    std::string            filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive   ar(filename, "w");
     auto                   group = ar["GROUP"];
     std::array<double, 10> data;
@@ -217,7 +218,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Update Array") {
-    std::string            filename = TEST_PATH + "/test_write.h5"s;
+    std::string            filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive   ar(filename, "w");
     auto                   group = ar["GROUP"];
     std::array<double, 10> data;
@@ -246,7 +247,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Update NDArray") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     NDArray<double, 3>   nd_data(
         std::array<size_t, 3>{
@@ -268,10 +269,11 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(std::equal(nd_data.data(), nd_data.data() + nd_data.size(), new_data.data(),
                        [](double a, double b) { return std::abs(a - b) < 1e-10; }));
     ar.close();
+    std::filesystem::remove(std::filesystem::path(filename));
   }
 
   SECTION("Write Complex Array") {
-    std::string                          filename = TEST_PATH + "/test_write.h5"s;
+    std::string                          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive                 ar(filename, "w");
     auto                                 group = ar["GROUP"];
     std::array<std::complex<double>, 10> data;
@@ -301,7 +303,7 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write NDArray") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP"];
     NDArray<double, 3>   data(
@@ -335,18 +337,18 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write different datatypes") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
-    bool b = true;
-    int32_t i = 10;
-    uint32_t ui = 10u;
-    int64_t l = 20l;
-    uint64_t ul = 30ul;
-    float f = 0.5f;
-    double d = 1.5;
-    std::complex<float> cf(0.5, 1.2);
+    bool                 b  = true;
+    int32_t              i  = 10;
+    uint32_t             ui = 10u;
+    int64_t              l  = 20l;
+    uint64_t             ul = 30ul;
+    float                f  = 0.5f;
+    double               d  = 1.5;
+    std::complex<float>  cf(0.5, 1.2);
     std::complex<double> cd(1.5, 0.2);
-    std::string s = "ABCD";
+    std::string          s = "ABCD";
     REQUIRE_NOTHROW(ar["b"] << b);
     REQUIRE_NOTHROW(ar["i"] << i);
     REQUIRE_NOTHROW(ar["ui"] << ui);
@@ -375,7 +377,7 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(ui == 10u);
     REQUIRE(l == 20l);
     REQUIRE(ul == 30ul);
-    REQUIRE(std::abs(f - 0.5f)< 1e-12);
+    REQUIRE(std::abs(f - 0.5f) < 1e-12);
     REQUIRE(std::abs(d - 1.5) < 1e-12);
     REQUIRE(std::abs(cf - std::complex<float>(0.5, 1.2)) < 1e-12);
     REQUIRE(std::abs(cd - std::complex<double>(1.5, 0.2)) < 1e-12);

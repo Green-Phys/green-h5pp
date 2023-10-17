@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "green/h5pp/archive.h"
+#include "test_common.h"
 
 TEST_CASE("Archive") {
   SECTION("Open") {
@@ -10,7 +11,7 @@ TEST_CASE("Archive") {
     REQUIRE_NOTHROW(green::h5pp::archive(root + "/test.h5"));
   }
   SECTION("Open Default Constructed") {
-    std::string root = TEST_PATH;
+    std::string          root = TEST_PATH;
     green::h5pp::archive ar;
     REQUIRE_NOTHROW(ar.open(root + "/test.h5"));
     REQUIRE_THROWS_AS(ar.open(root + "/test.h5"), green::h5pp::hdf5_file_access_error);
@@ -20,7 +21,7 @@ TEST_CASE("Archive") {
 
   SECTION("Open for Write") {
     std::string          root           = TEST_PATH;
-    std::string          file_to_create = root + "/test_create.h5";
+    std::string          file_to_create = root + "/"s + random_name();
     bool                 before         = std::filesystem::exists(file_to_create);
     green::h5pp::archive ar(file_to_create, "w");
     bool                 after = std::filesystem::exists(file_to_create);
@@ -85,7 +86,7 @@ TEST_CASE("Archive") {
   }
 
   SECTION("Create Tree") {
-    std::string          filename = TEST_PATH + "/test_write.h5"s;
+    std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
     auto                 group = ar["GROUP/TEST"];
     REQUIRE(group.type() == green::h5pp::UNDEFINED);
