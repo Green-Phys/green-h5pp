@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
+
 #ifndef H5PP_OBJECT_H
 #define H5PP_OBJECT_H
 
@@ -291,11 +296,24 @@ namespace green::h5pp {
      */
     bool is_valid() const { return _file_id != H5I_INVALID_HID || _current_id != H5I_INVALID_HID; }
 
-  protected:
+    /**
+     * @return current file HDF5 descriptor
+     */
     hid_t& file_id() { return _file_id; }
+    /**
+     * @return current file HDF5 descriptor
+     */
     hid_t  file_id() const { return _file_id; }
+    /**
+     * @return current object HDF5 identifier
+     */
     hid_t& current_id() { return _current_id; }
+    /**
+     * @return current object HDF5 identifier
+     */
     hid_t  current_id() const { return _current_id; }
+
+  protected:
     bool&  readonly() { return _readonly; }
     bool   readonly() const { return _readonly; }
 

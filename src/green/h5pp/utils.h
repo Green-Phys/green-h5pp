@@ -1,6 +1,7 @@
-//
-// Created by iskakoff on 9/20/23.
-//
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
 
 #ifndef H5PP_UTILS_H
 #define H5PP_UTILS_H

@@ -1,14 +1,15 @@
-//
-// Created by iskakoff on 9/12/23.
-//
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
 
 #include "green/h5pp/common.h"
 
 hid_t green::h5pp::create_group(hid_t root_parent, const std::string& name) {
   std::vector<std::string> parents_list = utils::split(name, "/");
-  std::string              current_root = "";
-  hid_t                    g_id         = H5I_INVALID_HID;
-  for (auto parent : parents_list) {
+  std::string              current_root;
+  hid_t                    g_id = H5I_INVALID_HID;
+  for (const auto& parent : parents_list) {
     current_root += "/" + parent;
     htri_t check = H5Lexists(root_parent, current_root.c_str(), H5P_DEFAULT);
     if (check <= 0) {

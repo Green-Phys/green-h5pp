@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
+
 #ifndef H5PP_COMMON_H
 #define H5PP_COMMON_H
 

@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
+
+
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <complex>

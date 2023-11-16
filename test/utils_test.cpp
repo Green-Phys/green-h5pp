@@ -1,6 +1,8 @@
-//
-// Created by iskakoff on 9/20/23.
-//
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
+
 #include "green/h5pp/utils.h"
 
 #include <catch2/catch_test_macros.hpp>

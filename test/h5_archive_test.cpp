@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
 
 #include <catch2/catch_test_macros.hpp>
 #include <filesystem>
@@ -28,13 +32,21 @@ TEST_CASE("Archive") {
     REQUIRE_FALSE(before == after);
     std::filesystem::remove(std::filesystem::path(file_to_create));
   }
+  SECTION("Open for Unknown") {
+    std::string          root           = TEST_PATH;
+    std::string          file_to_create = root + "/"s + random_name();
+    green::h5pp::archive ar;
+    REQUIRE_THROWS_AS(ar.open(file_to_create, "T"), green::h5pp::hdf5_unknown_access_type_error);
+  }
   SECTION("Open Text File") {
     std::string root = TEST_PATH;
-    // REQUIRE_THROWS_AS({green::h5pp::archive ar(root + "/test.txt")}, green::h5pp::not_hdf5_file_error);
+    green::h5pp::archive ar;
+    REQUIRE_THROWS_AS(ar.open(root + "/test.txt"), green::h5pp::not_hdf5_file_error);
   }
   SECTION("Open Wrong Path") {
     std::string root = TEST_PATH;
-    // REQUIRE_THROWS_AS({green::h5pp::archive ar(root + "/test")}, green::h5pp::hdf5_file_access_error);
+    green::h5pp::archive ar;
+     REQUIRE_THROWS_AS(ar.open(root + "/test"), green::h5pp::hdf5_file_access_error);
   }
   SECTION("Get Group") {
     std::string          root = TEST_PATH;
@@ -83,6 +95,7 @@ TEST_CASE("Archive") {
     REQUIRE(dataset.type() == green::h5pp::DATASET);
     dataset = ar["GROUP"]["INNER_GROUP/DATASET"];
     REQUIRE(dataset.type() == green::h5pp::DATASET);
+    REQUIRE_THROWS_AS(dataset["TEST"], green::h5pp::hdf5_notsupported_error);
   }
 
   SECTION("Create Tree") {

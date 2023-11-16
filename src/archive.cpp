@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
+
 #include "green/h5pp/archive.h"
 
 #include <filesystem>

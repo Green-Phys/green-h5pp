@@ -1,6 +1,7 @@
-//
-// Created by iskakoff on 9/14/23.
-//
+/*
+ * Copyright (c) 2023 University of Michigan
+ *
+ */
 
 #ifndef H5PP_TYPE_TRAITS_H
 #define H5PP_TYPE_TRAITS_H
