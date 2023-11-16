@@ -2,6 +2,7 @@
 [![GitHub license](https://img.shields.io/badge/C%2B%2B-17-blue)](https://en.cppreference.com/w/cpp/compiler_support/17)
 
 ![h5pp](https://github.com/Green-Phys/green-h5pp/actions/workflows/h5pp-test.yaml/badge.svg)
+[![codecov](https://codecov.io/github/Green-Phys/green-h5pp/graph/badge.svg?token=R5SDWK6BTR)](https://codecov.io/github/Green-Phys/green-h5pp)
 
 # Green-h5pp
 
