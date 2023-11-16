@@ -51,7 +51,7 @@ void green::h5pp::archive::open(const std::string& filename, const std::string& 
 }
 
 green::h5pp::archive::~archive() {
-  if (file_id() != H5I_INVALID_HID) H5Fclose(file_id());
+  if (file_id() != H5I_INVALID_HID) close();
 }
 
 bool green::h5pp::archive::close() {

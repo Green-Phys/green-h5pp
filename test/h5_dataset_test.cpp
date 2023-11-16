@@ -3,7 +3,6 @@
  *
  */
 
-
 #include <array>
 #include <catch2/catch_test_macros.hpp>
 #include <complex>
@@ -71,7 +70,9 @@ TEST_CASE("Dataset Operations") {
     green::h5pp::archive ar(root + "/test.h5");
     auto                 dataset = ar["GROUP"];
     double               data;
+    double*              data_ptr = &data;
     REQUIRE_THROWS_AS(dataset >> data, green::h5pp::hdf5_not_a_dataset_error);
+    REQUIRE_THROWS_AS(dataset >> data_ptr, green::h5pp::hdf5_not_a_dataset_error);
   }
 
   SECTION("Type Conversion") {
@@ -172,6 +173,13 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(data == "HELLO WORLD!"s);
   }
 
+  SECTION("Write into readonly") {
+    std::string          filename = TEST_PATH + "/test.h5"s;
+    green::h5pp::archive ar(filename, "r");
+    double a = 10;
+    REQUIRE_THROWS_AS(ar["GROUP/SCALAR_DATASET"] << a, green::h5pp::hdf5_write_error);
+  }
+
   SECTION("Write String") {
     std::string          filename = TEST_PATH + "/"s + random_name();
     green::h5pp::archive ar(filename, "w");
@@ -220,6 +228,15 @@ TEST_CASE("Dataset Operations") {
     group["DATASET"] >> new_data;
     REQUIRE(data.size() == new_data.size());
     REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    REQUIRE_THROWS(group << data);
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
+
+  SECTION("Write Unsupported Type") {
+    std::string            filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive   ar(filename, "w");
+    std::stringstream ss;
+    REQUIRE_THROWS_AS(ar["DATASET"] << ss, green::h5pp::hdf5_unsupported_type_error);
     std::filesystem::remove(std::filesystem::path(filename));
   }
 

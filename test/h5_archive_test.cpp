@@ -39,14 +39,14 @@ TEST_CASE("Archive") {
     REQUIRE_THROWS_AS(ar.open(file_to_create, "T"), green::h5pp::hdf5_unknown_access_type_error);
   }
   SECTION("Open Text File") {
-    std::string root = TEST_PATH;
+    std::string          root = TEST_PATH;
     green::h5pp::archive ar;
     REQUIRE_THROWS_AS(ar.open(root + "/test.txt"), green::h5pp::not_hdf5_file_error);
   }
   SECTION("Open Wrong Path") {
-    std::string root = TEST_PATH;
+    std::string          root = TEST_PATH;
     green::h5pp::archive ar;
-     REQUIRE_THROWS_AS(ar.open(root + "/test"), green::h5pp::hdf5_file_access_error);
+    REQUIRE_THROWS_AS(ar.open(root + "/test"), green::h5pp::hdf5_file_access_error);
   }
   SECTION("Get Group") {
     std::string          root = TEST_PATH;
@@ -68,6 +68,10 @@ TEST_CASE("Archive") {
     std::string          root = TEST_PATH;
     green::h5pp::archive ar(root + "/test.h5");
     REQUIRE_THROWS_AS(ar["GRP"], green::h5pp::hdf5_wrong_path_error);
+    {
+      const auto& ar2 = ar;
+      REQUIRE_THROWS_AS(ar2["GRP"], green::h5pp::hdf5_wrong_path_error);
+    }
   }
   SECTION("Check Group Existence") {
     std::string          root = TEST_PATH;
@@ -116,5 +120,12 @@ TEST_CASE("Archive") {
     REQUIRE(ar.close());
     REQUIRE_FALSE(ar.is_valid());
     REQUIRE_THROWS_AS(ar.close(), green::h5pp::hdf5_file_access_error);
+    ar.file_id()    = 55555;
+    ar.current_id() = 55555;
+    green::h5pp::archive ar2(root + "/test.h5");
+    REQUIRE_THROWS_AS(ar = ar2, green::h5pp::hdf5_object_close_error);
+    REQUIRE_THROWS_AS(ar.close(), green::h5pp::hdf5_file_access_error);
+    ar.file_id()    = H5I_INVALID_HID;
+    ar.current_id() = H5I_INVALID_HID;
   }
 }
