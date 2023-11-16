@@ -17,14 +17,14 @@ namespace green::h5pp::utils {
     res.erase(res.begin(),
               std::find_if(res.begin(), res.end(), [](unsigned char ch) { return !std::isspace(ch); }));
     return res;
-  }
+  } // LCOV_EXCL_LINE
   inline std::string rtrim(const std::string& s) {
     std::string res(s);
     res.erase(
         std::find_if(res.rbegin(), res.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(),
         res.end());
     return res;
-  }
+  } // LCOV_EXCL_LINE
   inline std::string              trim(const std::string& s) { return rtrim(ltrim(s)); }
   inline std::vector<std::string> split(const std::string& s, const std::string& delimiter) {
     std::vector<std::string> res;
@@ -43,7 +43,7 @@ namespace green::h5pp::utils {
       pos = new_pos + 1;
     }
     return res;
-  }
+  } // LCOV_EXCL_LINE
 
 }  // namespace green::h5pp::utils
 

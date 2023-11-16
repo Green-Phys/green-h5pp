@@ -76,19 +76,21 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Type Conversion") {
-    std::string          filename = TEST_PATH + "/test.h5"s;
-    green::h5pp::archive ar(filename, "r");
-    double               data_d;
-    float                data_s;
-    int                  data_i;
-    long                 data_l;
-    std::complex<double> data_z;
+    std::string           filename = TEST_PATH + "/test.h5"s;
+    green::h5pp::archive  ar(filename, "r");
+    double                data_d;
+    float                 data_s;
+    int                   data_i;
+    long                  data_l;
+    std::complex<double>  data_z;
+    std::complex<double>* data_z_ptr = &data_z;
     ar["GROUP/SCALAR_DATASET"] >> data_d >> data_s >> data_i >> data_l;
     REQUIRE(std::abs(data_d - 1.0) < 1e-10);
     REQUIRE(std::abs(data_s - 1.0) < 1e-6);
     REQUIRE(data_i == 1);
     REQUIRE(data_l == 1);
     REQUIRE_THROWS_AS(ar["GROUP/SCALAR_DATASET"] >> data_z, green::h5pp::hdf5_data_conversion_error);
+    REQUIRE_THROWS_AS(ar["GROUP/SCALAR_DATASET"] >> data_z_ptr, green::h5pp::hdf5_data_conversion_error);
     std::vector<double>               data_dv;
     std::vector<std::complex<double>> data_zv;
     REQUIRE_NOTHROW(ar["GROUP/VECTOR_DATASET"] >> data_dv);
@@ -171,12 +173,13 @@ TEST_CASE("Dataset Operations") {
     std::string          data;
     group["STRING_DATASET"] >> data;
     REQUIRE(data == "HELLO WORLD!"s);
+    REQUIRE_THROWS_AS(group["SCALAR_DATASET"] >> data, green::h5pp::hdf5_read_error);
   }
 
   SECTION("Write into readonly") {
     std::string          filename = TEST_PATH + "/test.h5"s;
     green::h5pp::archive ar(filename, "r");
-    double a = 10;
+    double               a = 10;
     REQUIRE_THROWS_AS(ar["GROUP/SCALAR_DATASET"] << a, green::h5pp::hdf5_write_error);
   }
 
@@ -233,9 +236,9 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write Unsupported Type") {
-    std::string            filename = TEST_PATH + "/"s + random_name();
-    green::h5pp::archive   ar(filename, "w");
-    std::stringstream ss;
+    std::string          filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive ar(filename, "w");
+    std::stringstream    ss;
     REQUIRE_THROWS_AS(ar["DATASET"] << ss, green::h5pp::hdf5_unsupported_type_error);
     std::filesystem::remove(std::filesystem::path(filename));
   }

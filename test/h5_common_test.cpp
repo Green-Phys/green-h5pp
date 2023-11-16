@@ -23,7 +23,10 @@ TEST_CASE("Common") {
     std::string          root           = TEST_PATH;
     std::string          file_to_create = root + "/"s + random_name();
     green::h5pp::archive ar(file_to_create, "w");
-    REQUIRE_FALSE(green::h5pp::dataset_exists(ar.file_id(), "TEST_DATASET"));
+    REQUIRE_FALSE(green::h5pp::dataset_exists(ar.file_id(), "CHECK/CHECK/TEST_DATASET"));
+    double x = 0;
+    green::h5pp::create_dataset(ar.file_id(), "CHECK/CHECK/TEST_DATASET", x);
+    std::filesystem::remove(file_to_create);
   }
 
 }
