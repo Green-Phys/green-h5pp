@@ -29,4 +29,16 @@ TEST_CASE("Common") {
     std::filesystem::remove(file_to_create);
   }
 
+  SECTION("Create When Already Exists") {
+    std::string          root           = TEST_PATH;
+    std::string          file_to_create = root + "/"s + random_name();
+    green::h5pp::archive ar(file_to_create, "w");
+    double x = 0;
+    green::h5pp::create_dataset(ar.file_id(), "TEST_DATASET", x);
+    green::h5pp::create_group(ar.file_id(), "TEST_GROUP");
+    REQUIRE_THROWS_AS(green::h5pp::create_dataset(ar.file_id(), "TEST_GROUP", x), green::h5pp::hdf5_create_dataset_error);
+    REQUIRE_THROWS_AS(green::h5pp::create_group(ar.file_id(), "TEST_DATASET"), green::h5pp::hdf5_create_group_error);
+    std::filesystem::remove(file_to_create);
+  }
+
 }

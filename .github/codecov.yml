@@ -1,3 +1,2 @@
 ignore:
   - "test/*"
-  - "src/green/h5pp/except.h"
