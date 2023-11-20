@@ -38,6 +38,17 @@ TEST_CASE("Archive") {
     green::h5pp::archive ar;
     REQUIRE_THROWS_AS(ar.open(file_to_create, "T"), green::h5pp::hdf5_unknown_access_type_error);
   }
+  SECTION("Open for Append when does not exist") {
+    std::string          root           = TEST_PATH;
+    std::string          file_to_create = root + "/"s + random_name();
+    green::h5pp::archive ar;
+    bool                 before         = std::filesystem::exists(file_to_create);
+    REQUIRE_NOTHROW(ar.open(file_to_create, "a"));
+    bool                 after = std::filesystem::exists(file_to_create);
+    REQUIRE_FALSE(before == after);
+    std::filesystem::remove(std::filesystem::path(file_to_create));
+  }
+
   SECTION("Open Text File") {
     std::string          root = TEST_PATH;
     green::h5pp::archive ar;
@@ -100,6 +111,8 @@ TEST_CASE("Archive") {
     dataset = ar["GROUP"]["INNER_GROUP/DATASET"];
     REQUIRE(dataset.type() == green::h5pp::DATASET);
     REQUIRE_THROWS_AS(dataset["TEST"], green::h5pp::hdf5_notsupported_error);
+    const auto & const_dataset = dataset;
+    REQUIRE_THROWS_AS(const_dataset["TEST"], green::h5pp::hdf5_notsupported_error);
   }
 
   SECTION("Create Tree") {

@@ -255,8 +255,10 @@ TEST_CASE("Dataset Operations") {
     data.fill(15);
     group["DATASET"] << data;
     group["DATASET"] >> new_data;
+    std::array<double, 12> bigger_data;
     REQUIRE(data.size() == new_data.size());
     REQUIRE(std::equal(data.begin(), data.end(), new_data.begin(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    REQUIRE_THROWS_AS(group["DATASET"] << bigger_data ,green::h5pp::hdf5_write_error);
     NDArray<double, 2> nd_data(
         std::array<size_t, 2>{
             {5, 5}
@@ -269,6 +271,12 @@ TEST_CASE("Dataset Operations") {
     group["ND_DATASET"] >> nd_data;
     REQUIRE(
         std::equal(data_25.begin(), data_25.end(), nd_data.data(), [](double a, double b) { return std::abs(a - b) < 1e-10; }));
+    NDArray<double, 2> bigger_nd_data(
+        std::array<size_t, 2>{
+            {15, 15}
+    },
+        5.0);
+    REQUIRE_THROWS_AS(group["ND_DATASET"] << bigger_nd_data ,green::h5pp::hdf5_write_error);
     std::filesystem::remove(std::filesystem::path(filename));
   }
 

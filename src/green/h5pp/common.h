@@ -108,11 +108,12 @@ namespace green::h5pp {
     if (check <= 0) {
       return false;
     }
+    bool        res = false;
     hdf5_info_t info;
     if (H5Oget_info_by_name2(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS, H5P_DEFAULT) >= 0) {
-      return info.type == H5O_TYPE_GROUP;
+      res = info.type == H5O_TYPE_GROUP;
     }
-    return false;
+    return res;
   }
 
   /**
@@ -132,11 +133,12 @@ namespace green::h5pp {
         return false;
       }
     }
+    bool        res = false;
     hdf5_info_t info;
     if (H5Oget_info_by_name2(root_parent, name.c_str(), &info, H5O_INFO_BASIC | H5O_INFO_NUM_ATTRS, H5P_DEFAULT) >= 0) {
-      return info.type == H5O_TYPE_DATASET;
+      res = info.type == H5O_TYPE_DATASET;
     }
-    return false;
+    return res;
   }
 
   /**
