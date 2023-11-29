@@ -418,4 +418,15 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(s == "ABCD");
     std::filesystem::remove(std::filesystem::path(filename));
   }
+
+  SECTION("Write String Vector") {
+    std::string          filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive ar(filename, "w");
+    std::vector<std::string>    sv{"ABC", "XYZZZZ"};
+    REQUIRE_NOTHROW(ar["DATASET"] << sv);
+    std::vector<std::string>    out_sv;
+    ar["DATASET"] >> out_sv;
+    REQUIRE(sv == out_sv);
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
 }

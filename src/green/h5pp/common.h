@@ -25,6 +25,77 @@ using namespace std::literals;
 
 namespace green::h5pp {
   namespace internal {
+    template <typename T>
+    struct hdf5_typename {
+      static hid_t type;
+    };
+
+    template <>
+    inline hid_t hdf5_typename<bool>::type = H5T_NATIVE_HBOOL;
+    template <>
+    inline hid_t hdf5_typename<int>::type = H5T_NATIVE_INT;
+    template <>
+    inline hid_t hdf5_typename<unsigned int>::type = H5T_NATIVE_UINT;
+    template <>
+    inline hid_t hdf5_typename<long>::type = H5T_NATIVE_LONG;
+    template <>
+    inline hid_t hdf5_typename<long long>::type = H5T_NATIVE_LLONG;
+    template <>
+    inline hid_t hdf5_typename<unsigned long>::type = H5T_NATIVE_ULONG;
+    template <>
+    inline hid_t hdf5_typename<unsigned long long>::type = H5T_NATIVE_ULLONG;
+    template <>
+    inline hid_t hdf5_typename<float>::type = H5T_NATIVE_FLOAT;
+    template <>
+    inline hid_t hdf5_typename<double>::type = H5T_NATIVE_DOUBLE;
+    template <>
+    inline hid_t hdf5_typename<std::string>::type = H5T_NATIVE_SCHAR;
+
+    /**
+     * Get H5 type id for the scalar data
+     *
+     * @tparam T type of the object
+     * @param rhs - scalar data
+     * @return corresponding H5 type id for the data
+     */
+    template <typename T>
+    std::enable_if_t<is_scalar<T> && !is_complex_scalar<T>, hid_t> get_type_id(const T&) {
+      return hdf5_typename<std::remove_const_t<T>>::type;
+    }
+
+    /**
+     * Get H5 type id for the std::complex scalar data
+     *
+     * @tparam T std::complex value type
+     * @param rhs - source data
+     * @return H5 compound type for std::complex
+     */
+    template <typename T>
+    hid_t get_type_id(const std::complex<T>&) {
+      hid_t tid = H5Tcreate(H5T_COMPOUND, sizeof(T) * 2);
+      H5Tinsert(tid, "r", 0, hdf5_typename<T>::type);
+      H5Tinsert(tid, "i", sizeof(T), hdf5_typename<T>::type);
+      return tid;
+    }
+
+    inline hid_t get_type_id(const std::string&) {
+      hid_t tid = H5Tcopy(H5T_C_S1);
+      H5Tset_size(tid, H5T_VARIABLE);
+      H5Tset_cset(tid, H5T_CSET_UTF8);
+      return tid;
+    }
+
+    /**
+     * Get underlying H5 type for 1+ dimensional data
+     * @tparam T - non-scalar datatype
+     * @param rhs - data container
+     * @return corresponding H5 data type id for container elements
+     */
+    template <typename T>
+    std::enable_if_t<is_1D_array<T> | is_ND_array<T>, hid_t> get_type_id(const T& rhs) {
+      return get_type_id(*rhs.data());
+    }
+
     /**
      * Create all necessary parent groups for current new H5 object
      *
@@ -70,30 +141,68 @@ namespace green::h5pp {
     }
 
     template <typename T>
-    struct hdf5_typename {
-      static hid_t type;
-    };
+    std::enable_if_t<!std::is_same_v<std::decay_t<T>, std::string> && !std::is_same_v<std::decay_t<T>, std::vector<std::string>>>
+    write(hid_t d_id, hid_t type_id, hid_t dataspace_id, T&& rhs) {
+      const void* data;
+      if constexpr (is_scalar<T>)
+        data = &rhs;
+      else if constexpr (is_1D_array<T> || is_ND_array<T>)
+        data = rhs.data();
+      H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, data);
+    }
 
-    template <>
-    inline hid_t hdf5_typename<bool>::type = H5T_NATIVE_HBOOL;
-    template <>
-    inline hid_t hdf5_typename<int>::type = H5T_NATIVE_INT;
-    template <>
-    inline hid_t hdf5_typename<unsigned int>::type = H5T_NATIVE_UINT;
-    template <>
-    inline hid_t hdf5_typename<long>::type = H5T_NATIVE_LONG;
-    template <>
-    inline hid_t hdf5_typename<long long>::type = H5T_NATIVE_LLONG;
-    template <>
-    inline hid_t hdf5_typename<unsigned long>::type = H5T_NATIVE_ULONG;
-    template <>
-    inline hid_t hdf5_typename<unsigned long long>::type = H5T_NATIVE_ULLONG;
-    template <>
-    inline hid_t hdf5_typename<float>::type = H5T_NATIVE_FLOAT;
-    template <>
-    inline hid_t hdf5_typename<double>::type = H5T_NATIVE_DOUBLE;
-    template <>
-    inline hid_t hdf5_typename<std::string>::type = H5T_NATIVE_SCHAR;
+    template <typename T>
+    std::enable_if_t<std::is_same_v<std::decay_t<T>, std::string> || std::is_same_v<std::decay_t<T>, std::vector<std::string>>>
+    write(hid_t d_id, hid_t type_id, hid_t dataspace_id, T&& rhs) {
+      if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+        const void* data = rhs.c_str();
+        H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, &data);
+      } else {
+        char** data = new char*[rhs.size()];
+        int    i    = 0;
+        for (const auto& it : rhs) {
+          data[i] = new char[it.size() + 1];
+          strcpy(data[i], it.c_str());
+          ++i;
+        }
+        H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, data);
+        for (unsigned int i = 0; i < rhs.size(); i++) {
+          delete[] data[i];
+        }
+        delete[] data;
+      }
+    }
+
+    template <typename T>
+    std::enable_if_t<!std::is_same_v<std::decay_t<T>, std::vector<std::string>>> read(hid_t current_id, const std::string& path,
+                                                                                      T&& rhs) {
+      void* data;
+      if constexpr (is_scalar<T>)
+        data = &rhs;
+      else
+        data = rhs.data();
+      if (H5Dread(current_id, get_type_id(rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+        throw hdf5_read_error("Can not read dataset " + path);
+    }
+
+    template <typename T>
+    std::enable_if_t<std::is_same_v<std::decay_t<T>, std::vector<std::string>>> read(hid_t current_id, const std::string& path,
+                                                                                     T&& rhs) {
+      char* data[rhs.size()];
+      hid_t tid      = get_type_id(rhs);
+      hid_t space_id = H5Dget_space(current_id);
+      if (H5Tget_class(tid) != H5T_STRING) {
+        throw hdf5_read_error("Dataset " + path + " does not contain string data.");
+      }
+      if (H5Dread(current_id, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+        throw hdf5_read_error("Cannot read the string " + path);
+      for(size_t i = 0; i< rhs.size(); ++i) {
+        rhs[i].append(data[i]);
+      }
+      // Free the resources allocated in the variable length read
+      if (H5Dvlen_reclaim(tid, space_id, H5P_DEFAULT, data) < 0)
+        throw hdf5_read_error("Cannot free resources for variable-length string type");
+    }
   }  // namespace internal
 
   /**
@@ -142,51 +251,6 @@ namespace green::h5pp {
   }
 
   /**
-   * Get H5 type id for the scalar data
-   *
-   * @tparam T type of the object
-   * @param rhs - scalar data
-   * @return corresponding H5 type id for the data
-   */
-  template <typename T>
-  std::enable_if_t<is_scalar<T> && !is_complex_scalar<T>, hid_t> get_type_id(const T& rhs) {
-    return internal::hdf5_typename<std::remove_const_t<T>>::type;
-  }
-
-  /**
-   * Get H5 type id for the std::complex scalar data
-   *
-   * @tparam T std::complex value type
-   * @param rhs - source data
-   * @return H5 compound type for std::complex
-   */
-  template <typename T>
-  hid_t get_type_id(const std::complex<T>& rhs) {
-    hid_t tid = H5Tcreate(H5T_COMPOUND, sizeof(T) * 2);
-    H5Tinsert(tid, "r", 0, internal::hdf5_typename<T>::type);
-    H5Tinsert(tid, "i", sizeof(T), internal::hdf5_typename<T>::type);
-    return tid;
-  }
-
-  inline hid_t get_type_id(const std::string& rhs) {
-    hid_t tid = H5Tcopy(H5T_C_S1);
-    H5Tset_size(tid, H5T_VARIABLE);
-    H5Tset_cset(tid, H5T_CSET_UTF8);
-    return tid;
-  }
-
-  /**
-   * Get underlying H5 type for 1+ dimensional data
-   * @tparam T - non-scalar datatype
-   * @param rhs - data container
-   * @return corresponding H5 data type id for container elements
-   */
-  template <typename T>
-  std::enable_if_t<is_1D_array<T> | is_ND_array<T>, hid_t> get_type_id(const T& rhs) {
-    return get_type_id(*rhs.data());
-  }
-
-  /**
    * Write `rhs' into dataset with id=d_id. For scalar `rhs' `hdf5_not_a_scalar_error' will be thrown if
    * target dataset is not scalar or has more than a single element. For 1+ dimensional `rhs' `hdf5_write_error' will be
    * thrown if source and target size/shape missmatched.
@@ -197,7 +261,7 @@ namespace green::h5pp {
    */
   template <typename T>
   void write_dataset(hid_t d_id, const std::string& path, T&& rhs) {
-    hid_t                type_id      = get_type_id(rhs);
+    hid_t                type_id      = internal::get_type_id(rhs);
     hid_t                dataspace_id = H5Dget_space(d_id);
     size_t               dst_rank     = H5Sget_simple_extent_ndims(dataspace_id);
     std::vector<hsize_t> int_dims(dst_rank);
@@ -205,12 +269,12 @@ namespace green::h5pp {
     std::vector<size_t> dst_dims(int_dims.begin(), int_dims.end());
     auto [src_rank, src_dims] = internal::extract_dataset_shape(rhs);
     if constexpr (is_scalar<T>) {
-      if (dst_rank != 0 && std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<size_t>()) != 1) {
+      if (dst_rank != 0 && std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<>()) != 1) {
         throw hdf5_not_a_scalar_error("Dataset " + path + " contains non scalar data.");
       }
     } else if constexpr (is_1D_array<T>) {
-      if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<size_t>()) !=
-          std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>())) {
+      if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<>()) !=
+          std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<>())) {
         throw hdf5_write_error("Source container's shape and dataset " + path + "'s shape are different.");
       }
     } else if constexpr (is_ND_array<T>) {
@@ -220,12 +284,7 @@ namespace green::h5pp {
     } else {
       throw hdf5_write_error("Can update only numerical types");
     }
-    const void* data;
-    if constexpr (is_scalar<T>)
-      data = &rhs;
-    else if constexpr (is_1D_array<T> || is_ND_array<T>)
-      data = rhs.data();
-    H5Dwrite(d_id, type_id, H5S_ALL, dataspace_id, H5P_DEFAULT, data);
+    internal::write(d_id, type_id, dataspace_id, rhs);
     H5Sclose(dataspace_id);
   }
 
@@ -259,25 +318,15 @@ namespace green::h5pp {
     auto [rank, int_dims] = internal::extract_dataset_shape(rhs);
     std::vector<hsize_t> dims(int_dims.begin(), int_dims.end());
     hid_t                dataspace_id = is_scalar<T> ? H5Screate(H5S_SCALAR) : H5Screate_simple(rank, dims.data(), NULL);
-    hid_t                type_id      = get_type_id(rhs);
+    hid_t                type_id      = internal::get_type_id(rhs);
     // else type_id = get_type_id(*rhs.data());
     hid_t d_id = H5Dcreate2(root_parent, name.c_str(), type_id, dataspace_id, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (d_id == H5I_INVALID_HID) {
       throw hdf5_create_dataset_error("Can not create dataset " + name);
     }
-    const void* data;
-    if constexpr (is_scalar<T>)
-      data = &rhs;
-    else if constexpr (is_string<T>)
-      data = rhs.c_str();
-    else
-      data = rhs.data();
     H5Sclose(dataspace_id);
     dataspace_id = H5Dget_space(d_id);
-    if constexpr (is_string<T>)
-      H5Dwrite(d_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, &data);
-    else
-      H5Dwrite(d_id, type_id, H5S_ALL, H5S_ALL, H5P_DEFAULT, data);
+    internal::write(d_id, type_id, dataspace_id, rhs);
     H5Sclose(dataspace_id);
     return d_id;
   }
@@ -303,14 +352,14 @@ namespace green::h5pp {
     std::vector<size_t> src_dims(int_dims.begin(), int_dims.end());
     auto [dst_rank, dst_dims] = internal::extract_dataset_shape(rhs);
     if constexpr (is_scalar<T>) {
-      if (src_rank != 0 && std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>()) != 1) {
+      if (src_rank != 0 && std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<>()) != 1) {
         throw hdf5_not_a_scalar_error("Dataset " + path + " contains non scalar data.");
       }
     } else if constexpr (is_1D_array<T>) {
-      if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<size_t>()) !=
-          std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>())) {
+      if (std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<>()) !=
+          std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<>())) {
         if constexpr (is_resizable<T>) {
-          rhs.resize(std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>()));
+          rhs.resize(std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<>()));
         } else {
           throw hdf5_read_error("Target container's shape and dataset's shape are different and container cannot be resized.");
         }
@@ -324,16 +373,10 @@ namespace green::h5pp {
         }
       }
     }
-    if (H5Tcompiler_conv(H5Dget_type(current_id), get_type_id(rhs)) < 0) {
+    if (H5Tcompiler_conv(H5Dget_type(current_id), internal::get_type_id(rhs)) < 0) {
       throw hdf5_data_conversion_error("Can not convert data to specified type.");
     }
-    void* data;
-    if constexpr (is_scalar<T>)
-      data = &rhs;
-    else
-      data = rhs.data();
-    if (H5Dread(current_id, get_type_id(rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
-      throw hdf5_read_error("Can not read dataset " + path);
+    internal::read(current_id, path, rhs);
   }
 
   /**
@@ -353,12 +396,11 @@ namespace green::h5pp {
     src_rank = H5Sget_simple_extent_ndims(space_id);
     std::vector<hsize_t> int_dims(src_rank);
     H5Sget_simple_extent_dims(space_id, int_dims.data(), NULL);
-    std::vector<size_t> src_dims(int_dims.begin(), int_dims.end());
-    if (H5Tcompiler_conv(H5Dget_type(current_id), get_type_id(*rhs)) < 0) {
+    if (H5Tcompiler_conv(H5Dget_type(current_id), internal::get_type_id(*rhs)) < 0) {
       throw hdf5_data_conversion_error("Can not convert data to specified type.");
     }
     void* data = rhs;
-    if (H5Dread(current_id, get_type_id(*rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
+    if (H5Dread(current_id, internal::get_type_id(*rhs), H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
       throw hdf5_read_error("Can not read dataset " + path);
   }
 
@@ -381,12 +423,17 @@ namespace green::h5pp {
     H5Sget_simple_extent_dims(space_id, int_dims.data(), NULL);
     std::vector<size_t> src_dims(int_dims.begin(), int_dims.end());
     auto [dst_rank, dst_dims] = internal::extract_dataset_shape(rhs);
-    if constexpr (is_scalar<T>) {
-      if (src_rank != 0 && std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<size_t>()) != 1) {
+    hid_t tid                 = H5Dget_type(current_id);
+    if constexpr (is_string<T>) {
+      if (src_rank != 0 && std::accumulate(src_dims.begin(), src_dims.end(), 1ul, std::multiplies<>()) != 1) {
         throw hdf5_not_a_scalar_error("Dataset " + path + " contains non scalar data.");
       }
+      // if (H5Sget_simple_extent_type(space_id) != H5S_SCALAR) {
+      //   throw hdf5_read_error("Dataset " + path + " should be a scalar to read string data.");
+      // }
+      // if constexpr (is_scalar<T>) {
+      // }
     }
-    hid_t tid = H5Dget_type(current_id);
     if (H5Tget_class(tid) != H5T_STRING) {
       throw hdf5_read_error("Dataset " + path + " does not contain string data.");
     }
