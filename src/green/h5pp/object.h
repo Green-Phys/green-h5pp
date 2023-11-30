@@ -254,7 +254,7 @@ namespace green::h5pp {
           throw hdf5_unsupported_type_error("Type "s + typeid(T).name() + " is not supported in current implementation"s);
         }
       } else {
-        if constexpr (is_scalar<T> || is_1D_array<T> || is_ND_array<T>) {
+        if constexpr (is_scalar<T> || is_1D_array<T> || is_ND_array<T> || is_string<T>) {
           write_dataset(_current_id, _path, rhs);
         } else {
           throw hdf5_unsupported_type_error("Type "s + typeid(T).name() + " is not supported in current implementation"s);

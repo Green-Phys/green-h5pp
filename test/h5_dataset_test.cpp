@@ -420,13 +420,35 @@ TEST_CASE("Dataset Operations") {
   }
 
   SECTION("Write String Vector") {
-    std::string          filename = TEST_PATH + "/"s + random_name();
-    green::h5pp::archive ar(filename, "w");
-    std::vector<std::string>    sv{"ABC", "XYZZZZ"};
+    std::string              filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive     ar(filename, "w");
+    std::vector<std::string> sv{"ABC", "XYZZZZ"};
     REQUIRE_NOTHROW(ar["DATASET"] << sv);
-    std::vector<std::string>    out_sv;
+    std::vector<std::string> out_sv;
     ar["DATASET"] >> out_sv;
     REQUIRE(sv == out_sv);
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
+
+  SECTION("Update Strings") {
+    std::string              filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive     ar(filename, "w");
+    std::string s = "ABC";
+    std::vector<std::string> sv{"ABC", "XYZZZZ"};
+    std::string s2 = "XYZ!@#";
+    std::vector<std::string> sv2{"ABCDEF", "XYZZZZ123"};
+    REQUIRE_NOTHROW(ar["DATASET_V"] << sv);
+    REQUIRE_NOTHROW(ar["DATASET"] << s);
+    ar.close();
+    ar.open(filename, "a");
+    REQUIRE_NOTHROW(ar["DATASET_V"] << sv2);
+    REQUIRE_NOTHROW(ar["DATASET"] << s2);
+    std::vector<std::string> out_sv;
+    std::string out_s;
+    ar["DATASET"] >> out_s;
+    ar["DATASET_V"] >> out_sv;
+    REQUIRE(sv2 == out_sv);
+    REQUIRE(s2 == out_s);
     std::filesystem::remove(std::filesystem::path(filename));
   }
 }

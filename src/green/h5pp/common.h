@@ -196,7 +196,7 @@ namespace green::h5pp {
       }
       if (H5Dread(current_id, tid, H5S_ALL, H5S_ALL, H5P_DEFAULT, data) < 0)
         throw hdf5_read_error("Cannot read the string " + path);
-      for(size_t i = 0; i< rhs.size(); ++i) {
+      for (size_t i = 0; i < rhs.size(); ++i) {
         rhs[i].append(data[i]);
       }
       // Free the resources allocated in the variable length read
@@ -268,7 +268,7 @@ namespace green::h5pp {
     H5Sget_simple_extent_dims(dataspace_id, int_dims.data(), NULL);
     std::vector<size_t> dst_dims(int_dims.begin(), int_dims.end());
     auto [src_rank, src_dims] = internal::extract_dataset_shape(rhs);
-    if constexpr (is_scalar<T>) {
+    if constexpr (is_scalar<T> || is_string<T>) {
       if (dst_rank != 0 && std::accumulate(dst_dims.begin(), dst_dims.end(), 1ul, std::multiplies<>()) != 1) {
         throw hdf5_not_a_scalar_error("Dataset " + path + " contains non scalar data.");
       }

@@ -17,6 +17,7 @@ TEST_CASE("Common") {
     REQUIRE_FALSE(green::h5pp::group_exists(ar.file_id(), "TEST_GROUP"));
     green::h5pp::create_group(ar.file_id(), "TEST_GROUP");
     REQUIRE(green::h5pp::group_exists(ar.file_id(), "TEST_GROUP"));
+    std::filesystem::remove(file_to_create);
   }
 
   SECTION("Create Dataset") {
