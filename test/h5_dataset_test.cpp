@@ -451,4 +451,18 @@ TEST_CASE("Dataset Operations") {
     REQUIRE(s2 == out_s);
     std::filesystem::remove(std::filesystem::path(filename));
   }
+
+  SECTION("Obtain shape") {
+    std::string            filename = TEST_PATH + "/test.h5"s;
+    green::h5pp::archive   ar(filename, "r");
+    auto shape1 = green::h5pp::dataset_shape(ar.current_id(), "GROUP/VECTOR_DATASET");
+    auto shapen = green::h5pp::dataset_shape(ar.current_id(), "GROUP/NDARRAY_DATASET");
+    REQUIRE(shape1.size() == 1);
+    REQUIRE(shapen.size() == 2);
+    auto shape0 = green::h5pp::dataset_shape(ar.current_id(), "GROUP/SCALAR_DATASET");
+    REQUIRE(shape0.size() == 0);
+    auto shape0_str = green::h5pp::dataset_shape(ar.current_id(), "GROUP/STRING_DATASET");
+    REQUIRE(shape0_str.size() == 0);
+    REQUIRE_THROWS_AS(green::h5pp::dataset_shape(ar.current_id(), "NULL/SCALAR_DATASET"), green::h5pp::hdf5_wrong_path_error);
+  }
 }

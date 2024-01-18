@@ -252,6 +252,28 @@ namespace green::h5pp {
   }
 
   /**
+   * Check if dataset `name` exists and return it's shape.
+   *
+   * @param root_parent id of the parent HDF5 object
+   * @param name name of the dataset to get shape
+   * @return std::vector that contains shape of the dataset `name`
+   */
+  inline std::vector<size_t> dataset_shape(hid_t root_parent, const std::string& name) {
+    if(!dataset_exists(root_parent, name)) {
+      throw hdf5_wrong_path_error("Dataset " + name + " does not exist.");
+    }
+    const auto current_id = H5Dopen2(root_parent, name.c_str(), H5P_DEFAULT);
+    const auto space_id = H5Dget_space(current_id);
+
+    const auto src_rank = H5Sget_simple_extent_ndims(space_id);
+    std::vector<hsize_t> int_dims(src_rank);
+    H5Sget_simple_extent_dims(space_id, int_dims.data(), NULL);
+    std::vector<size_t> shape(int_dims.begin(), int_dims.end());
+    H5Dclose(current_id);
+    return shape;
+  }
+
+  /**
    * Write `rhs' into dataset with id=d_id. For scalar `rhs' `hdf5_not_a_scalar_error' will be thrown if
    * target dataset is not scalar or has more than a single element. For 1+ dimensional `rhs' `hdf5_write_error' will be
    * thrown if source and target size/shape missmatched.
