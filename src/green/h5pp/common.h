@@ -323,6 +323,16 @@ namespace green::h5pp {
   hid_t create_group(hid_t root_parent, const std::string& name);
 
   /**
+   * Move group to a new location
+   *
+   * @param src_loc_id id of file or group of a source
+   * @param src_name name of a group to be moved relative to a source
+   * @param dst_loc_id id of file or group of a desitnation
+   * @param dst_name new name of the group at the destination
+   */
+  void move_group(hid_t src_loc_id, const std::string& src_name, hid_t dst_loc_id, const std::string& dst_name);
+
+  /**
    * Create dataset at `name' path for `root_parent' object and write `rhs' data into it.
    * Absolute path is used if `name' starts with `/', otherwise the path is relative to `root_parent'.
    * All parent groups willl be created if needed.

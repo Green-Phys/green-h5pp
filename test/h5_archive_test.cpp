@@ -42,9 +42,9 @@ TEST_CASE("Archive") {
     std::string          root           = TEST_PATH;
     std::string          file_to_create = root + "/"s + random_name();
     green::h5pp::archive ar;
-    bool                 before         = std::filesystem::exists(file_to_create);
+    bool                 before = std::filesystem::exists(file_to_create);
     REQUIRE_NOTHROW(ar.open(file_to_create, "a"));
-    bool                 after = std::filesystem::exists(file_to_create);
+    bool after = std::filesystem::exists(file_to_create);
     REQUIRE_FALSE(before == after);
     std::filesystem::remove(std::filesystem::path(file_to_create));
   }
@@ -111,7 +111,7 @@ TEST_CASE("Archive") {
     dataset = ar["GROUP"]["INNER_GROUP/DATASET"];
     REQUIRE(dataset.type() == green::h5pp::DATASET);
     REQUIRE_THROWS_AS(dataset["TEST"], green::h5pp::hdf5_notsupported_error);
-    const auto & const_dataset = dataset;
+    const auto& const_dataset = dataset;
     REQUIRE_THROWS_AS(const_dataset["TEST"], green::h5pp::hdf5_notsupported_error);
   }
 
@@ -124,6 +124,28 @@ TEST_CASE("Archive") {
     REQUIRE(inner_group.type() == green::h5pp::UNDEFINED);
     group = ar["GROUP"];
     REQUIRE(group.type() == green::h5pp::GROUP);
+    std::filesystem::remove(std::filesystem::path(filename));
+  }
+  SECTION("Move") {
+    std::string          filename = TEST_PATH + "/"s + random_name();
+    green::h5pp::archive ar(filename, "w");
+    // create undefined object
+    auto group = ar["GROUP"];
+    // convert it to a group
+    group["TEST/DATA"] << 123;
+    auto data = group["TEST/DATA"];
+    // trying to move dataset
+    REQUIRE_THROWS_AS(data.move("", "TEST3"), green::h5pp::hdf5_move_group_error);
+    // trying to move
+    REQUIRE_THROWS_AS(group.move("TEST2", "TEST3"), green::h5pp::hdf5_move_group_error);
+    group.move("TEST", "TEST2");
+    REQUIRE(group.has_group("TEST2"));
+    group.move("TEST2/DATA", "TEST2/WATA");
+    REQUIRE(group.is_data("TEST2/WATA"));
+    ar.close();
+    ar.open(filename);
+    group = ar["GROUP"];
+    REQUIRE_THROWS_AS(group.move("TEST2", "TEST3"), green::h5pp::hdf5_write_error);
     std::filesystem::remove(std::filesystem::path(filename));
   }
   SECTION("Close File") {

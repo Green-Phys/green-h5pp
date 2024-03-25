@@ -62,6 +62,10 @@ namespace green::h5pp {
   public:
     hdf5_create_group_error(const std::string& string) : runtime_error(string) {}
   };
+  class hdf5_move_group_error : public std::runtime_error {
+  public:
+    hdf5_move_group_error(const std::string& string) : runtime_error(string) {}
+  };
   class hdf5_create_dataset_error : public std::runtime_error {
   public:
     hdf5_create_dataset_error(const std::string& string) : runtime_error(string) {}

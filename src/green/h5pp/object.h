@@ -75,6 +75,7 @@ namespace green::h5pp {
       _file_id        = rhs._file_id;
       _path           = rhs._path;
       _type           = rhs._type;
+      _readonly       = rhs._readonly;
       rhs._current_id = H5I_INVALID_HID;
       rhs._file_id    = H5I_INVALID_HID;
       return *this;
@@ -264,10 +265,23 @@ namespace green::h5pp {
       return *this;
     }
 
+    void move(const std::string& src_name, const std::string& dst_name) {
+      if (_type != GROUP && _type != FILE) {
+        throw hdf5_move_group_error(_path + " is not group or file");
+      }
+      if (_readonly) {
+        throw hdf5_write_error("Can not move readonly object");
+      }
+      if (!has_group(src_name) && !is_data(src_name)) {
+        throw hdf5_move_group_error("Source '" + src_name + "' is not found");
+      }
+      move_group(_current_id, src_name, _current_id, dst_name);
+    }
+
     /**
      * @return Absolute path to the object
      */
-    const std::string& path() const { return _path; }
+    [[nodiscard]] const std::string& path() const { return _path; }
 
     /**
      * @return type of the object
@@ -303,7 +317,7 @@ namespace green::h5pp {
     /**
      * @return current file HDF5 descriptor
      */
-    hid_t  file_id() const { return _file_id; }
+    hid_t file_id() const { return _file_id; }
     /**
      * @return current object HDF5 identifier
      */
@@ -311,11 +325,11 @@ namespace green::h5pp {
     /**
      * @return current object HDF5 identifier
      */
-    hid_t  current_id() const { return _current_id; }
+    hid_t current_id() const { return _current_id; }
 
   protected:
-    bool&  readonly() { return _readonly; }
-    bool   readonly() const { return _readonly; }
+    bool& readonly() { return _readonly; }
+    bool  readonly() const { return _readonly; }
 
   private:
     hid_t       _file_id;

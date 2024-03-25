@@ -26,3 +26,10 @@ hid_t green::h5pp::create_group(hid_t root_parent, const std::string& name) {
   }
   return g_id;
 }
+
+void green::h5pp::move_group(hid_t src_loc_id, const std::string& src_name, hid_t dst_loc_id, const std::string& dst_name) {
+  herr_t herr = H5Gmove2(src_loc_id, src_name.c_str(), dst_loc_id, dst_name.c_str());
+  if(herr < 0) {
+    throw hdf5_move_group_error("Can not move group " + src_name + " to " + dst_name);
+  }
+}
