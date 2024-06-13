@@ -296,6 +296,43 @@ namespace green::h5pp {
       return group_exists(_current_id, group_name[0] != '/' ? _path + "/" + group_name : group_name);
     }
 
+      /**
+       * @return `true' if current object has attribute `name'
+       */
+      bool has_attribute(const std::string& attribute_name) const {
+        if (_current_id == H5I_INVALID_HID) return false;
+        return attribute_exists(_current_id, attribute_name);
+      }
+
+      /**
+       * Read value of the attribute `name' from the current object
+       *
+       * @tparam T type of the attribute
+       * @param attribute_name name of the attribute to read
+       * @return value of the attribute `attribute_name'
+       */
+      template<typename T>
+      T get_attribute(const std::string& attribute_name) const {
+        T attribute_value;
+        read_attribute(_current_id, attribute_name, attribute_value);
+        return attribute_value;
+      }
+
+      /**
+       * Set value to the attribute `attribute_name'
+       *
+       * @tparam T - data type of the attribute
+       * @param attribute_name name of the attribute to be set
+       * @param attribute_value value to be set
+       */
+      template<typename T>
+      void set_attribute(const std::string& attribute_name, const T& attribute_value) {
+        if (_readonly) {
+          throw hdf5_write_error("Can not write into readonly object");
+        }
+        write_attribute(_current_id, attribute_name, attribute_value);
+      }
+
     /**
      * @return `true' if dataset `dataset_name' exists
      */

@@ -227,6 +227,108 @@ namespace green::h5pp {
   }
 
   /**
+   * Check if attribute with name `name' exists in the specified object
+   *
+   * @param obj_id - id of the hdf5 object
+   * @param name - name of the attribute
+   * @return `true' if object `obj_id' has attribute `name'
+   */
+  inline bool attribute_exists(hid_t obj_id, const std::string& name) {
+    htri_t check = H5Aexists(obj_id, name.c_str());
+    if (check <= 0) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Write attribute `name' to HDF5 object. We create new attribute if it does not exist and update the current value
+   *
+   * @tparam T type of the attribute
+   * @param obj_id - id of the hdf5 object we want to write attribute
+   * @param name - name of the attribute
+   * @param value - value to be written
+   */
+  template <typename T>
+  void write_attribute(hid_t obj_id, const std::string& name, const T& value) {
+    hid_t attr;
+    if (!attribute_exists(obj_id, name)) {
+      hid_t attr_prop, attr_space;
+      if ((attr_prop = H5Pcreate(H5P_ATTRIBUTE_CREATE)) == H5I_INVALID_HID) {
+        throw hdf5_write_error("Cannot create attribute `" + name + "' property");
+      }
+      // use UTF-8 encoding for the attribute name
+      if (H5Pset_char_encoding(attr_prop, H5T_CSET_UTF8) < 0) {
+        throw hdf5_write_error("Cannot set attribute `" + name + "'  name's encoding");
+      }
+      if ((attr_space = H5Screate(H5S_SCALAR)) == H5I_INVALID_HID) {
+        throw hdf5_write_error("Cannot create attribute `" + name + "' dataspace");
+      }
+      if ((attr = H5Acreate2(obj_id, name.c_str(), internal::get_type_id(value), attr_space, attr_prop, H5P_DEFAULT)) ==
+          H5I_INVALID_HID) {
+        throw hdf5_write_error("Cannot create attribute `" + name + "'." );
+      }
+      H5Aclose(attr);
+      H5Sclose(attr_space);
+      H5Pclose(attr_prop);
+    } else {
+      attr = H5Aopen(obj_id, name.c_str(), H5P_DEFAULT);
+      if (H5Tcompiler_conv(H5Aget_type(attr), internal::get_type_id(value)) < 0) {
+        H5Aclose(attr);
+        throw hdf5_data_conversion_error("Can not convert data to specified type.");
+      }
+      H5Aclose(attr);
+    }
+    attr = H5Aopen(obj_id, name.c_str(), H5P_DEFAULT);
+    const void* data;
+    if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+      data = value.c_str();
+      if (H5Awrite(attr, internal::get_type_id(value), &data) < 0) {
+        throw hdf5_write_error("Cannot write string attribute value");
+      }
+    } else {
+      data = &value;
+      if (H5Awrite(attr, internal::get_type_id(value), data) < 0) {
+        throw hdf5_write_error("Cannot write attribute value");
+      }
+    }
+    H5Aclose(attr);
+  }
+
+  /**
+   * Read attribute `name' from object `obj_id' and write it into `value' variable
+   * Throw an exception if attribute does not exist
+   *
+   * @tparam T
+   * @param obj_id - id of an hdf5 object we read attribute from
+   * @param name - name of the attribute to be read
+   * @param value - variable to hold the return value
+   */
+  template <typename T>
+  void read_attribute(hid_t obj_id, const std::string& name, T& value) {
+    hid_t attr;
+    if (!attribute_exists(obj_id, name)) {
+      throw hdf5_read_error("Attribute '" + name + "' does not exist.");
+    }
+    attr = H5Aopen(obj_id, name.c_str(), H5P_DEFAULT);
+    if (H5Tcompiler_conv(H5Aget_type(attr), internal::get_type_id(value)) < 0) {
+      H5Aclose(attr);
+      throw hdf5_data_conversion_error("Can not convert data to specified type.");
+    }
+    if constexpr (std::is_same_v<std::decay_t<T>, std::string>) {
+      char*       rd_ptr[1];
+      if (H5Aread(attr, internal::get_type_id(value), &rd_ptr) < 0)
+        throw hdf5_read_error("Cannot read the string attribute " + name + ".");
+      value.append(rd_ptr[0]);
+    } else {
+      if (H5Aread(attr, internal::get_type_id(value), &value) < 0) {
+        throw hdf5_read_error("Can not read attribute " + name + ".");
+      }
+    }
+    H5Aclose(attr);
+  }
+
+  /**
    * Check if dataset with name `name' exists
    *
    * @param root_parent - hdf5 id of the root group or file
@@ -259,13 +361,13 @@ namespace green::h5pp {
    * @return std::vector that contains shape of the dataset `name`
    */
   inline std::vector<size_t> dataset_shape(hid_t root_parent, const std::string& name) {
-    if(!dataset_exists(root_parent, name)) {
+    if (!dataset_exists(root_parent, name)) {
       throw hdf5_wrong_path_error("Dataset " + name + " does not exist.");
     }
-    const auto current_id = H5Dopen2(root_parent, name.c_str(), H5P_DEFAULT);
-    const auto space_id = H5Dget_space(current_id);
+    const auto           current_id = H5Dopen2(root_parent, name.c_str(), H5P_DEFAULT);
+    const auto           space_id   = H5Dget_space(current_id);
 
-    const auto src_rank = H5Sget_simple_extent_ndims(space_id);
+    const auto           src_rank   = H5Sget_simple_extent_ndims(space_id);
     std::vector<hsize_t> int_dims(src_rank);
     H5Sget_simple_extent_dims(space_id, int_dims.data(), NULL);
     std::vector<size_t> shape(int_dims.begin(), int_dims.end());
