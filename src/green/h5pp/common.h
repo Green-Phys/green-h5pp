@@ -6,8 +6,11 @@
 #ifndef H5PP_COMMON_H
 #define H5PP_COMMON_H
 
+#pragma push_macro("context")
+#undef context
 #include <hdf5.h>
 #include <hdf5_hl.h>
+#pragma pop_macro("context")
 
 #include <cstring>
 #include <numeric>
