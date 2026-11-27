@@ -12,14 +12,17 @@ jobs:
     strategy:
       fail-fast: false
 
-    runs-on: self-hosted
-
+    runs-on: [ self-hosted, ift-vm ]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openmpi-bin libopenmpi-dev libhdf5-dev libeigen3-dev libopenblas-dev lcov
 
     - name: Build h5pp
       run: |
-        module load BuildEnv/gcc-12.2.0.lua;
         mkdir build && cd build && cmake  -DCMAKE_CXX_FLAGS=" --coverage -fno-inline -fno-inline-small-functions -fno-default-inline -fprofile-arcs -ftest-coverage " ..;
         make -j2 || make -j1 VERBOSE=1
 
@@ -27,22 +30,20 @@ jobs:
       env:
         HDF5_USE_FILE_LOCKING: 'FALSE'
       run: |
-        module load BuildEnv/gcc-12.2.0.lua;
         cd build;
         ctest -j4 --output-on-failure
 
     - name: Run coverage
       run: |
-        module load BuildEnv/gcc-12.2.0.lua;
         cd build;
-        lcov --capture --directory . --output-file coverage.info;
-        lcov --remove coverage.info '/usr/*' --output-file coverage.info
-        lcov --remove coverage.info '/opt/ohpc/pub/compiler/*' --output-file coverage.info
-        lcov --remove coverage.info '*catch*' --output-file coverage.info
+        lcov --ignore-errors source,source --capture --directory . --output-file coverage.info;
+        lcov --ignore-errors unused --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --ignore-errors unused --remove coverage.info '/opt/ohpc/pub/compiler/*' --output-file coverage.info
+        lcov --ignore-errors unused --remove coverage.info '*catch*' --output-file coverage.info
         lcov --list coverage.info
 
     - name: Upload coverage reports to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v7
       env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
